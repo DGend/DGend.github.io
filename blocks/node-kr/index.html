@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Knowledge Representation — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-kr&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Knowledge Representation</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>Knowledge Representation</h1>
@@ -91,7 +119,7 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
       지식을 기호(온톨로지, 논리, 지식그래프)로 표현하고 그 위에서 추론하는 고전 AI 접근. 신경망 기반 학습과 대비되는 규칙/구조 중심 패러다임이다.
@@ -100,7 +128,15 @@
 
   
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#보강노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-10</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +151,17 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

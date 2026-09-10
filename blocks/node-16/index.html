@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Semi- supervised — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-16&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Semi- supervised</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>Semi- supervised</h1>
@@ -91,16 +119,28 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      소량의 레이블 데이터와 대량의 무레이블 데이터를 함께 활용하는 학습 방식. 레이블링 비용이 큰 도메인에서 지도학습과 비지도학습의 장점을 절충한다.
+      <p>준지도 학습(semi-supervised learning)은 레이블이 지정된 소량의 데이터와 레이블이 없는 대량의 데이터를 함께 사용해 모델을 훈련하는 기계 학습 방식이다. 지도 학습과 비지도 학습 사이의 중간 지점으로 볼 수 있으며, 레이블이 없는 데이터는 저렴하게 얻을 수 있지만 완전히 레이블링된 대규모 데이터셋을 구축하는 것은 비용과 시간이 많이 든다는 현실적 제약에서 출발한다.</p>
+      <p>실제로 기계 학습을 특정 산업이나 응용 분야에 적용할 때는 레이블이 지정된 훈련 데이터가 부족한 경우가 흔하다. 새로운 분야라서 축적된 데이터 자체가 적거나, 레이블링에 생물의학이나 보안처럼 전문 지식이 필요해 비용이 커지거나, 사기 탐지처럼 빠르게 변하는 문제라서 데이터를 준비할 시간이 부족한 경우 등이 대표적이다. 이런 병목을 완화하기 위한 접근으로 능동 학습, 전이 학습과 함께 준지도 학습이 자리한다.</p>
+      <p>레이블이 부족한 상황에서는 완벽하지 않지만 유용한 신호, 즉 약한 레이블(weak label)을 활용하기도 한다. 샘플 묶음에 대한 전역 통계 정보만 아는 경우, 크라우드소싱이나 휴리스틱 규칙처럼 정확도는 낮지만 여러 개 확보 가능한 약한 분류기를 쓰는 경우, 각 레이블에 대한 정보가 부분적으로만 주어지는 불완전한 주석의 경우로 나눌 수 있다. 준지도 학습은 이 중에서도 소량의 정확한 레이블과 대량의 무레이블 데이터를 함께 쓰는 특수한 형태에 해당한다.</p>
+      <p>준지도 학습은 레이블이 없는 데이터에 대해서만 정답을 추론하는 변환적(transductive) 방식과, 레이블이 없는 새로운 입력에도 일반화되는 매핑 규칙 자체를 학습하는 귀납적(inductive) 방식으로 나뉜다. 레이블이 지정된 데이터만으로 학습하거나 레이블을 버리고 비지도 학습을 수행하는 것보다, 두 종류의 데이터를 함께 활용했을 때 더 나은 분류 성능을 얻을 수 있다는 것이 준지도 학습의 핵심 전제다.</p>
+      <p>이 전제가 성립하려면 데이터 분포에 대한 몇 가지 가정이 필요하다. 서로 가까운 데이터는 같은 레이블을 가질 가능성이 높다는 연속성(smoothness) 가정, 같은 클러스터에 속한 데이터는 같은 클래스에 속하는 경향이 있고 결정 경계는 밀도가 낮은 영역에 놓여야 한다는 클러스터 가정, 고차원 데이터가 실제로는 훨씬 낮은 차원의 매니폴드 위에 존재한다고 보는 매니폴드 가정이 대표적이다. 이러한 가정이 데이터의 실제 구조와 맞아떨어질 때, 레이블 없는 데이터는 결정 경계를 더 정교하게 다듬는 데 실질적으로 기여한다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>Lee, &quot;Pseudo-Label&quot; (2013)</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>Lee, &quot;Pseudo-Label&quot; (2013)</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

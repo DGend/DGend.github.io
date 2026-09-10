@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Graph DL — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-13&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Graph DL</div>
   <p class="eyebrow">Computer Vision</p>
   <h1>Graph DL</h1>
@@ -91,16 +119,28 @@
     <span class="badge mono">Computer Vision</span>
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      그래프 구조 데이터(소셜 네트워크, 분자, 지식그래프)에 딥러닝을 적용하는 분야. 메시지 패싱을 통해 노드/엣지의 관계 정보를 표현에 반영한다.
+      <p>그래프 신경망(GNN)은 그래프로 표현되는 데이터를 처리하기 위한 딥러닝 방법론이다. 노드, 에지, 전체 그래프 수준의 예측을 수행할 수 있으며, 핵심 목표는 각 노드가 이웃의 정보를 반영한 임베딩을 학습하는 것이다. 컴퓨터 비전의 합성곱 신경망은 픽셀을 노드로, 인접 픽셀 관계를 에지로 보는 GNN의 한 사례로, 자연어 처리의 트랜스포머는 토큰들이 완전그래프로 연결된 GNN의 한 사례로 해석할 수 있다. GNN의 핵심 동작 원리는 쌍별 메시지 전달이다. 각 노드가 이웃과 정보를 교환하며 자신의 표현을 반복적으로 갱신하는 방식으로, 순열 등가 계층(이웃 정보를 집계해 표현을 갱신), 로컬 풀링 계층(다운샘플링으로 수용 영역을 넓힘), 글로벌 풀링 계층(그래프 전체를 고정 크기 표현으로 요약)이라는 세 가지 기본 구성 요소로 이루어진다.</p>
+      <p>GNN이 필요한 이유는 합성곱 신경망(CNN)이 다루기 어려운 데이터 구조 때문이다. 그래프는 토폴로지가 임의적이고 공간적 지역성이 없으며 노드 순서가 고정되어 있지 않아 CNN을 그대로 적용하기 어렵다. GNN은 노드의 입력 순서에 무관하게 각 노드에서 정보를 전파하고, 그래프 구조 자체를 특징으로 활용한다. 기존에는 그래프 문제를 풀기 위해 사람이 직접 피처 엔지니어링을 수행한 표현을 완전연결 신경망 등에 입력했지만, GNN은 원시 그래프를 그대로 입력받아 문제 목표에 맞게 처리 방식을 스스로 학습한다는 점에서 차별화된다. 또한 노드와 에지 순열에 불변하므로 학습 시 보지 못한 다양한 크기와 구조의 그래프에도 일반화할 수 있는 강한 귀납적 편향을 제공한다.</p>
+      <p>그래프를 다루는 배경에는 유클리드 공간과 비유클리드 공간의 구분이 있다. 머신러닝은 전통적으로 데이터를 실수 벡터나 텐서, 즉 평탄성을 가진 유클리드 공간으로 표현해왔다. 그러나 계층 구조를 갖는 트리 형태의 데이터처럼 많은 실세계 데이터는 본질적으로 비유클리드 구조를 가진다. 예컨대 쌍곡 공간은 트리 구조를 표현하는 데 유클리드 공간보다 훨씬 적합하며, 실제로 지식 그래프 임베딩이나 그래프 합성곱 신경망에서 데이터가 쌍곡 공간과 유사한 구조를 가질 때 성능이 향상된다는 연구 결과가 있다. 비유클리드 공간은 더 적은 차원으로도 유연한 연산을 가능하게 하여 모델의 표현력을 끌어올릴 여지를 제공한다.</p>
+      <p>그래프 자체는 정점(노드)의 집합과 에지(연결)의 집합으로 이루어진 순서쌍으로 정의되는 수학적 구조다. 트리와 달리 루트 노드나 방향의 제약이 없어 노드가 임의의 방식으로 서로 연결될 수 있다. 에지의 성질에 따라 그래프는 크게 세 가지로 나뉜다. 무향 그래프는 두 노드 사이의 관계가 대칭적이어서 에지를 양방향으로 오갈 수 있으며, 페이스북의 친구 관계처럼 상호적인 연결을 표현하는 데 쓰인다. 유향 그래프는 에지에 방향이 있어 한쪽에서 다른 쪽으로만 이동할 수 있으며, 트위터의 팔로우 관계나 웹페이지 간 링크처럼 비대칭적 관계를 표현한다. 가중 그래프는 에지에 비용이나 거리 같은 수치를 부여한 것으로, 최단 경로 탐색이나 경로 계획과 같은 문제에 널리 쓰인다.</p>
+      <p>이러한 그래프 구조 위에서 다양한 모델이 발전해왔다. 그래프 임베딩은 노드의 의미론적, 구조적 정보를 저차원 벡터로 압축해 머신러닝 알고리즘이 다룰 수 있게 한다. 그래프 합성곱 신경망(GCN)은 이웃 노드의 특징을 집계하는 메시지 전달을 통해 국소 구조와 노드 속성을 함께 인코딩하며, 노드 분류나 링크 예측 등 여러 과제에서 널리 쓰인다. GraphSAGE는 이웃을 샘플링해 귀납적으로 임베딩을 생성함으로써 대규모 또는 동적 그래프에도 대응하고, 그래프 어텐션 네트워크(GAT)는 어텐션 메커니즘으로 이웃마다 다른 중요도를 부여해 표현력과 해석 가능성을 높인다. 이 밖에도 그래프를 인코더와 디코더로 재구성하는 그래프 오토인코더, 여러 유형의 에지를 구별해 관계형 데이터를 다루는 관계형 GCN(RGCN), 트랜스포머의 자기 어텐션을 그래프 전역으로 확장한 그래프 트랜스포머 계열 모델, 그리고 BERT나 GPT의 아이디어를 그래프에 적용한 Graph-Bert와 GraphGPT 같은 모델들이 그래프 딥러닝의 응용 범위를 소셜 네트워크, 분자 구조, 지식 그래프 등으로 넓히고 있다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>Scarselli et al., &quot;The Graph Neural Network Model&quot; (2009)</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>Scarselli et al., &quot;The Graph Neural Network Model&quot; (2009)</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>Computer Vision</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#cv</span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AGI — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-27&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / AGI</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>AGI</h1>
@@ -91,16 +119,28 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      특정 과제에 국한되지 않고 인간 수준의 범용 지능을 목표로 하는 개념. 아직 합의된 정의나 달성 기준이 없는 연구·논쟁의 대상이다.
+      <p>인공 일반 지능(AGI)은 특정 작업을 수행하도록 설계된 좁은 AI와 달리, 인간 지능에 견줄 만한 유연성으로 다양한 영역에서 이해하고 학습하며 적응할 수 있는 시스템을 가리킨다. 사전에 정의된 좁은 과제에 국한되지 않고, 훈련받지 않은 새로운 문제도 스스로 학습해 해결하는 것이 목표다. 다만 많은 전문가들은 AGI가 아직 가상의 개념이며, 인간 사고와 추론의 복잡한 본질을 완전히 복제할 만큼 현재 기술이 성숙하지 않았다고 본다. 그럼에도 이를 추구하는 과정은 머신러닝, 신경망, 계산 능력의 경계를 계속 넓혀가고 있다.</p>
+      <p>오늘날의 AI 시스템은 대개 특정 도메인 내에서 상당한 사전 훈련을 거쳐야 유용하게 작동한다. 예를 들어 대규모 언어 모델을 의료 데이터로 미세 조정해야 비로소 의료 상담에 일관되게 응답할 수 있다. 반면 AGI는 인간처럼 수동 개입 없이 다양한 도메인의 문제를 스스로 일반화해 해결하는 완전한 인공지능의 이론적 표현으로 제시된다.</p>
+      <p>AGI 연구의 기초 요소 중 하나는 자율 에이전트다. 자율 에이전트는 인간의 개입 없이 스스로 결정을 내리고 행동하는 소프트웨어나 기계로, 센서를 통해 환경을 인식하고, 데이터를 처리해 상황을 이해하고, 알고리즘이나 학습된 규칙에 따라 의사결정을 내리고, 실제 행동을 취한 뒤 그 결과를 피드백으로 받아 다시 적응하는 순환 구조를 가진다. 이러한 에이전트는 정해진 규칙만 따르는 기존 시스템과 달리 경험에서 학습하며 더 다재다능한 과제를 처리한다.</p>
+      <p>AGI의 인지 기초는 지각, 절차적 기억, 에피소드 기억, 주의와 행동 선택 등의 모듈로 구성된 인지 주기로 설명되기도 한다. 지각은 감각 입력을 해석해 환경에 대한 개념적 이해로 통합하는 과정이고, 절차적 기억은 의식적 인식 없이 수행되는 기술과 절차를, 에피소드 기억은 특정 사건의 무엇, 어디, 언제를 저장하고 회상하는 기능을 맡는다. 주의는 이 가운데 관련성 높은 정보만 걸러내는 필터링 과정으로, 인지 주기 전체가 감각 데이터에서 최종 행동에 이르기까지 단계적으로 정보를 선별해 나가는 구조로 이해할 수 있다.</p>
+      <p>AI의 학습과 인간의 학습은 방식에서 근본적인 차이를 보인다. AI는 대규모 데이터셋에서 패턴과 관계를 식별하는 방식으로 학습하며, 방대한 데이터를 빠르게 처리해 상관관계를 찾는 데 강점을 가진다. 반면 인간의 학습은 경험, 감정, 사회적 상호작용이 결합된 훨씬 전체적인 과정이며, 낯선 상황에 대한 적응력이 더 뛰어나다. AI는 편향된 데이터에서 왜곡된 결과를 낼 위험이 있고 인과 추론에도 한계를 보이는데, 이러한 차이와 한계를 이해하는 것이 AGI가 풀어야 할 과제의 핵심을 이룬다.</p>
     </div>
   </section>
 
   
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,17 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

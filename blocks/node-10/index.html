@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deep NLP — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-10&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Deep NLP</div>
   <p class="eyebrow">NLP / LLM</p>
   <h1>Deep NLP</h1>
@@ -91,16 +119,29 @@
     <span class="badge mono">NLP / LLM</span>
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      RNN·LSTM 이후 신경망 기반으로 전환된 NLP. 문맥을 반영한 분산 표현 학습이 규칙/통계 기반 접근을 대체하며 번역·요약·감성분석 등에서 성능을 크게 끌어올렸다.
+      <p>자연어 처리(NLP)는 인간의 언어를 기계가 작성하고 말하고 이해할 수 있도록 다루는 분야다. 텍스트의 의도된 의미를 파악하는 자연어 이해(NLU)와 기계가 텍스트를 생성하는 자연어 생성(NLG)이라는 두 하위 분야로 나뉘며, 챗봇, 검색 엔진, 기계 번역, 증오 표현 필터링 등 이미 일상 곳곳에 적용되어 있다.</p>
+      <p>NLP의 역사는 규칙 기반 시스템에서 통계적 모델을 거쳐 신경망 기반 접근으로 이어져 왔다. 인간 언어는 뉘앙스와 모호성, 문맥 의존성이 강해 전문가가 수작업으로 만든 규칙만으로는 다루기 어려웠고, 작업이 복잡해질수록 필요한 규칙 수가 기하급수적으로 늘어나는 확장성 문제도 있었다. 2010년대 중반 순환 신경망(RNN)과 장단기 기억(LSTM) 네트워크가 도입되면서 언어의 순차적 의존 관계를 포착할 수 있게 되었고, 이는 NLP의 중요한 돌파구가 되었다.</p>
+      <p>딥러닝이 NLP에 기여하는 핵심은 특성 학습 능력이다. 언어학자나 도메인 전문가가 손으로 특성을 설계하는 대신, 딥러닝 모델은 원시 데이터에서 필요한 표현을 스스로 발견한다. 또한 주변 단어와 구문을 함께 분석해 같은 단어라도 상황에 따라 다른 의미를 갖는다는 점, 즉 문맥을 반영할 수 있다는 점에서 언어 분석과 생성의 정확도를 크게 끌어올렸다.</p>
+      <p>모델에 데이터를 입력하기 전에는 텍스트 정리, 불용어 제거, 어간 추출 또는 표제어 추출 같은 전처리 과정을 거친다. 이후 Bag-of-Words나 TF-IDF처럼 단어의 등장 빈도와 중요도를 수치화하는 방식, 또는 Word2Vec이나 GLoVE처럼 문맥적 의미를 저차원 벡터로 학습하는 임베딩 방식을 통해 텍스트를 모델이 처리할 수 있는 수치 표현으로 변환한다.</p>
+      <p>NLP에 주로 쓰이는 딥러닝 구조는 RNN 계열(LSTM, GRU)과 이를 활용한 Seq2Seq 모델, 그리고 트랜스포머로 이어진다. 인코더와 디코더로 구성된 Seq2Seq 구조는 입력 시퀀스를 고차원 벡터로 압축한 뒤 번역이나 요약 같은 출력 시퀀스로 변환하며, 순서에 따라 의미가 달라지는 문장 데이터에 특히 적합하다. 2017년 발표된 트랜스포머는 순환 구조 없이 셀프 어텐션 메커니즘만으로 입력과 출력 사이의 전역적 의존 관계를 포착하며, 병렬 처리가 가능해 학습 속도와 추론 비용 면에서도 RNN 계열을 크게 앞선다.</p>
+      <p>트랜스포머의 등장 이후 NLP는 GPT, BERT 같은 대규모 사전학습 언어 모델로 발전했고, 그 영향력은 자연어 처리를 넘어 컴퓨터 비전과 강화학습, 나아가 멀티모달 네트워크로까지 확장되고 있다. 다만 현재의 NLP 시스템은 여전히 편향되거나 일관성이 부족한 결과를 낼 수 있어, 훈련 데이터에 내재한 편향과 공정성, 투명성 문제를 함께 다루는 책임 있는 개발이 요구된다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>Collobert &amp; Weston, Unified NLP Architecture (2008)</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>Collobert &amp; Weston, Unified NLP Architecture (2008)</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>NLP / LLM</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#nlp</span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +156,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

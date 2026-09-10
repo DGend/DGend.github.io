@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>X-Formers at CV — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-19&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / X-Formers at CV</div>
   <p class="eyebrow">Computer Vision</p>
   <h1>X-Formers at CV</h1>
@@ -91,16 +119,28 @@
     <span class="badge mono">Computer Vision</span>
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      트랜스포머의 셀프어텐션을 컴퓨터 비전에 적용한 변형들(ViT, Swin Transformer 등). CNN의 지역 귀납 편향 대신 전역적 관계를 직접 학습한다.
+      <p>컨볼루션 신경망(CNN)은 이미지에서 특성과 패턴을 자동으로 학습하는 능력 덕분에 오랫동안 컴퓨터 비전의 표준으로 자리잡았다. 그러나 CNN은 국소 영역을 중심으로 처리하기 때문에 공간 정보가 손실되기 쉽고, 더 크고 복잡한 패턴을 다룰 때는 성능이 한계에 부딪히는 경우가 많았다. 2017년 자연어 처리 분야에서 처음 소개된 트랜스포머 구조는 이후 이미지 영역으로 확장되었고, 2020년 발표된 ViT(Vision Transformer)는 이미지 분석에 특화된 트랜스포머로서 경쟁력 있는 성능을 보이며 주목받았다.</p>
+      <p>ViT는 입력 이미지를 여러 개의 패치로 나눈 뒤 각 패치를 평면화하여 일련의 트랜스포머 레이어에 입력하는 방식으로 동작한다. 국소 수용 영역에 의존하는 CNN과 달리, ViT는 셀프 어텐션 메커니즘을 통해 이미지 전체에 걸친 장거리 관계를 직접 모델링할 수 있다. 이 때문에 CNN은 인접 픽셀 간 상관관계라는 강한 귀납적 편향을 전제로 하는 반면, ViT는 이러한 사전 지식을 거의 가정하지 않는다는 근본적인 차이를 지닌다.</p>
+      <p>다만 ViT는 이러한 구조적 장점에도 불구하고 학습 데이터가 제한적인 경우에는 CNN보다 낮은 성능을 보이는 경향이 있고, 넓은 수용 영역을 다루는 만큼 계산량도 훨씬 크다. 이런 단점을 보완하기 위해 등장한 것이 CNN과 트랜스포머를 결합한 하이브리드 비전 트랜스포머(Hybrid Vision Transformer)다. 이 구조는 CNN의 컨볼루션 레이어로 이미지의 국소적 특성을 먼저 추출한 뒤, 이를 트랜스포머에 입력하여 셀프 어텐션으로 전역적 문맥을 함께 학습하는 방식을 취한다.</p>
+      <p>ViT 내부는 크게 패치 임베딩과 트랜스포머 레이어로 구성된다. 패치 임베딩 단계에서는 이미지 패치를 저차원 벡터로 변환하고, 여기에 위치 정보와 클래스 토큰을 더해 인코더에 전달한다. 트랜스포머 레이어는 계층 정규화, 잔차 연결, 멀티헤드 셀프 어텐션, 피드포워드 신경망으로 이루어지는데, 잔차 연결은 깊은 신경망에서 그래디언트가 소실되는 문제를 완화하고, 피드포워드 신경망은 비선형 변환과 특성 강화를 담당한다.</p>
+      <p>최근 몇 년 사이 비전 트랜스포머 구조는 다양한 방식으로 변형되어 왔으며, 크게 패치 기반 접근, 지식 전이 기반 접근, 이동 창(shifted window) 기반 접근, 어텐션 기반 접근, 다중 트랜스포머 기반 접근의 다섯 가지 계열로 분류할 수 있다. ViT와 Swin Transformer 같은 대표적인 모델들은 이러한 흐름 속에서 CNN의 지역적 귀납 편향을 넘어, 이미지 전역의 관계를 직접 학습하는 방향으로 컴퓨터 비전의 접근법을 재정의하고 있다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>ViT · DETR</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>ViT · DETR</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>Computer Vision</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#cv</span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

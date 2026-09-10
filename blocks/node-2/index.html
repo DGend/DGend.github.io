@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Machine Learning — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-2&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Machine Learning</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>Machine Learning</h1>
@@ -91,16 +119,27 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      명시적으로 규칙을 프로그래밍하지 않고, 데이터로부터 패턴을 학습해 예측·결정을 내리는 AI의 한 방법론. 지도학습·비지도학습·강화학습으로 크게 나뉘며, 현대 AI 성과 대부분의 기반이 된다.
+      <p>기계 학습(Machine Learning)은 데이터를 활용해 특정 작업의 성능을 향상시키는 방법을 연구하는 분야로, 인공지능의 한 하위 집합으로 간주된다. 전통적인 프로그래밍에서는 컴퓨터가 미리 정의된 명령에 따라 동작하지만, 기계 학습에서는 예시 데이터와 수행할 작업만 주어지고 그 작업을 어떻게 수행할지는 컴퓨터 스스로 데이터에서 찾아낸다. 예를 들어 고양이 이미지를 인식시키려 할 때 고양이의 생김새를 직접 정의하는 대신, 수많은 고양이 사진을 제공해 알고리즘이 공통 패턴과 특징을 스스로 파악하게 하는 방식이다.</p>
+      <p>기계 학습이라는 용어는 1959년 IBM의 Arthur Samuel이 처음 사용했으며, 이후 패턴 인식 연구와 신경망 연구를 거쳐 1990년대부터 독립된 분야로 자리잡았다. 초기 인공지능 연구가 논리·지식 기반 접근에 무게를 둔 반면, 기계 학습은 실용적으로 풀 수 있는 문제에 집중하면서 통계학, 확률 이론 등에서 방법론을 차용해 발전했다. Tom M. Mitchell은 이를 공식적으로 정의하며, 작업 T에 대한 성능 측정 P가 경험 E를 통해 향상될 때 그 컴퓨터 프로그램이 학습한다고 표현했다. 기계 학습은 데이터 마이닝, 최적화, 통계학과 방법론을 공유하지만 목적은 각기 다르다. 데이터 마이닝이 데이터에서 알려지지 않은 속성을 탐색적으로 발견하는 데 중점을 둔다면, 기계 학습은 알려진 속성을 바탕으로 새로운 데이터에 대한 예측에 초점을 맞춘다.</p>
+      <p>기계 학습 접근법은 학습에 사용되는 신호의 성격에 따라 크게 세 갈래로 나뉜다. 지도 학습은 입력과 원하는 출력이 쌍으로 주어진 데이터를 통해 입력을 출력으로 매핑하는 규칙을 학습하며, 분류와 회귀 문제에 널리 쓰인다. 비지도 학습은 레이블이 없는 데이터에서 스스로 구조나 군집을 찾아내는 방식으로, 데이터 탐색이나 특징 학습에 활용된다. 강화 학습은 에이전트가 동적인 환경과 상호작용하며 보상을 최대화하는 방향으로 행동을 학습하는 방식이다. 이 외에도 준지도 학습, 자기지도 학습, 표현 학습 등 다양한 변형이 존재한다. 모델을 실제로 훈련할 때는 데이터를 훈련 세트와 테스트 세트로 나누어, 훈련 데이터로 모델의 매개변수를 반복적으로 조정하고 손실 함수를 최소화한 뒤, 보지 못한 데이터에 대한 일반화 성능을 별도로 평가한다.</p>
+      <p>기계 학습은 강력한 도구이지만 여러 한계를 지닌다. 모델이 훈련 데이터의 노이즈까지 지나치게 학습해 새로운 데이터에서 성능이 떨어지는 과적합, 반대로 모델이 지나치게 단순해 기본 패턴조차 포착하지 못하는 과소적합은 대표적인 문제다. 또한 훈련 데이터에 담긴 사회적 편향이 그대로 학습되어 차별적인 결과를 낳을 위험, 적대적 공격이나 데이터 포이즈닝에 대한 취약성, 대규모 데이터와 연산 자원에 대한 높은 의존성도 중요한 제약이다. 상관관계를 기반으로 예측하는 특성상 인과관계를 설명하지 못한다는 점, 실험 설정이 충분히 공개되지 않아 결과를 재현하기 어려운 경우가 많다는 점, 그리고 복잡한 모델일수록 결정 과정을 해석하기 어려운 블랙박스 문제도 함께 논의된다. 이러한 한계들은 공정성 인식 알고리즘, 정규화와 교차 검증, 투명성 제고 노력 등을 통해 지속적으로 개선되고 있다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>Samuel, &quot;Machine Learning Using the Game of Checkers&quot; (1959)</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>Samuel, &quot;Machine Learning Using the Game of Checkers&quot; (1959)</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +154,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

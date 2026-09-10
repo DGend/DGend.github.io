@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Neuroscience — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-26&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Neuroscience</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>Neuroscience</h1>
@@ -91,16 +119,29 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      뇌와 신경계의 구조·기능을 연구하는 학문. 스파이킹 뉴런, 신경가소성 등의 발견이 신경망 설계와 학습 규칙에 영향을 주었다.
+      <p>전산 신경과학의 목표는 신경계가 인지 기능과 행동을 지원하기 위해 정보를 어떻게 처리하는지 기계적으로 설명하는 것이다. 그 핵심에는 감각 자극을 신경 반응이나 행동 반응으로 매핑하는 수학적, 계산적 모델이 있다. 최근에는 피드포워드와 순환 구조를 쓰는 심층 신경망(DNN)이 인공지능의 여러 영역을 지배하게 되었는데, "신경망"이라는 이름에서 알 수 있듯 이 모델들은 생물학적 뇌에서 영감을 받았다. 다만 현재의 DNN은 생물학적 신경망의 많은 세부 사항을 추상화한 형태이며, 그 대신 계산 효율을 높여 시각 인식부터 언어 번역, 로봇 제어에 이르는 복잡한 지능적 작업을 가능하게 한다.</p>
+      <p>인간의 뇌와 인공신경망(ANN)은 둘 다 정보 처리 도구이지만 근본적으로 다르게 작동한다. 약 860억 개의 뉴런이 시냅스로 연결된 인간의 뇌는 해마, 전전두엽 피질처럼 기능이 특화된 영역을 갖추고 신경가소성을 통해 학습한다. 경험과 활동이 시냅스 연결을 강화하거나 약화시키는 방식이다. 반면 ANN은 입력, 은닉, 출력 계층으로 구성된 단순화된 구조이며, 역전파로 가중치와 편향을 조정해 학습한다. 뇌는 제한된 데이터에서도 일반화하고 여러 영역에 지식을 전이할 수 있는 반면, ANN은 특정 작업에서는 매우 강력하지만 재훈련 없이는 새로운 상황에 적응하기 어렵고 의사결정 과정도 해석하기 어려운 블랙박스로 남는다.</p>
+      <p>생물학적 뇌에서 영감을 받은 신경망 모델은 이제 머신러닝의 중심축이 되었다. 특히 합성곱 신경망은 국소 수용 영역과 가중치 공유를 통해 학습할 매개변수 수를 크게 줄이면서도, 영장류 시각 시스템처럼 비선형 계산을 여러 단계로 쌓고 계층에 따라 수용 영역의 크기와 복잡성이 커지는 구조를 갖는다. 실제로 물체 인식을 학습한 심층 합성곱 신경망은 초기 층에서 1차 시각피질과 유사한 수용 필드를 형성하고, 하측두엽의 단일 세포 반응까지 상당 부분 예측하는 것으로 나타나, 계산신경과학에서 신경 반응을 예측할 수 있는 거의 유일한 모델군으로 평가받는다.</p>
+      <p>DNN은 신경 데이터에서 직접 도출되기보다 외부의 행동 목표를 최적화하도록 훈련되므로, 실제 뇌 활동과 얼마나 일치하는지는 별도로 검증해야 한다. 연구자들은 자극 특성으로 신경 반응을 예측하는 인코딩 모델, 자극 간 표상 구조를 비교하는 표현 유사성 분석, 모델과 뇌가 자극을 구별하지 못하는 지점을 찾는 메타머, 모델만 혼동시키는 최소한의 이미지 변형인 적대적 예 등 다양한 도구로 DNN과 뇌의 내부 표상을 비교한다. 이런 비교는 단일 뉴런 기록부터 fMRI, MEG, 행동 반응에 이르는 여러 수준에서 이루어지며, 모델과 생물학적 시스템이 어디서 닮고 어디서 갈라지는지를 드러낸다.</p>
+      <p>신경과학은 뇌와 척수, 말초 신경계를 포괄하는 신경계 전체를 연구하는 학제간 과학으로, 분자와 세포 수준의 연구에서부터 신경 회로, 인지와 행동, 임상 응용에 이르기까지 여러 층위를 아우른다. 분자·세포 신경과학은 뉴런의 발달과 신호 전달을, 시스템 신경과학은 신경 회로가 반사, 감각 통합, 학습, 기억 같은 기능을 어떻게 만들어내는지를 다루며, 인지신경과학은 주의·지각·언어·의사결정 같은 심리적 기능이 신경 회로에서 어떻게 구현되는지를 연구한다. 계산신경과학은 이 모든 층위를 수학적 모델과 시뮬레이션으로 통합해 검증 가능한 가설로 바꾸는 역할을 한다.</p>
+      <p>딥러닝과 신경과학은 서로를 보완하며 발전해 왔다. 초기 시스템 신경과학은 소수의 뉴런만 기록할 수 있어 단순한 회로 수준 이론에 머물렀지만, 인공신경망을 활용하면서 신피질이나 해마처럼 복잡한 기능도 다룰 수 있는 새로운 틀을 얻었다. 신경과학은 기존 수학·논리 기반 알고리즘과는 다른 새로운 아키텍처의 영감을 제공하고, 반대로 뇌에서 실제로 구현된 것으로 밝혀진 알고리즘은 기계학습 접근을 검증하는 근거가 된다. 목적 함수, 학습 규칙, 아키텍처라는 세 가지 요소를 중심으로 뇌의 계산을 설명하려는 시도는 신경과학이 던지는 질문과 딥러닝이 제공하는 도구가 만나는 지점을 보여준다.</p>
     </div>
   </section>
 
   
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +156,17 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

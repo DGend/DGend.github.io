@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Classification — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-9&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Classification</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>Classification</h1>
@@ -91,16 +119,27 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      입력을 미리 정의된 이산 범주 중 하나로 할당하는 지도학습 과제. 이미지 인식, 스팸 필터링 등 가장 널리 쓰이는 기본 과제 유형이다.
+      <p>이미지 분류는 지배적인 객체나 이미지에 존재하는 특성을 기반으로 전체 이미지를 식별하고, 미리 정의된 범주 중 하나의 레이블을 지정하는 작업이다. 예를 들어 고양이, 개, 토끼가 섞인 이미지 집합이 주어지면, 분류 모델은 각 이미지를 서로 구별되는 범주로 나눈다. 컴퓨터 비전과 머신러닝에서 가장 기본이 되는 과제이며, 픽셀이나 벡터에 적용된 규칙에 따라 이미지 내용을 인식하고 분류하는 것을 목표로 한다.</p>
+      <p>분류의 핵심 목적은 이미지를 구성하는 각 픽셀을 여러 사전 정의된 범주 중 하나에 할당하는 데 있다. 보통은 다중 스펙트럼 데이터를 활용해 데이터 내의 스펙트럼 패턴에서 분류 근거를 확립하며, 이미지에 존재하는 특성을 식별해 고유한 색상이나 명암 값으로 표현함으로써 실제 대상물에 대응시키는 것을 지향한다.</p>
+      <p>객체 간의 차이를 구별하는 일은 본질적으로 복잡한 작업이기 때문에, 이미지 분류는 디지털 이미지 분석과 컴퓨터 비전 분야의 초석으로 여겨진다. 방대한 양의 이미지를 사람이 직접 검사하고 분류하는 것은 현실적으로 매우 힘든 일이므로, 이를 자동화하는 컴퓨터 비전 기술의 가치는 매우 크다.</p>
+      <p>대표적인 접근인 감독 분류는 사용자가 이미지에서 특정 클래스를 대표하는 표본 픽셀을 직접 선택하는 원리로 동작한다. 이렇게 선택된 훈련 영역(training site)은 이미지 내 나머지 픽셀을 분류하는 기준점 역할을 하며, 사용자는 훈련 영역의 스펙트럼 속성에 따라 픽셀을 묶는 유사성 임계값과 분류할 클래스의 수를 함께 정한다. 각 클래스가 통계적으로 특성화되고 나면, 모델은 각 픽셀의 반사율 등을 분석해 가장 유사한 특성을 찾아 최종적으로 이미지를 분류한다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>Cover &amp; Hart, k-NN (1967)</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>Cover &amp; Hart, k-NN (1967)</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +154,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

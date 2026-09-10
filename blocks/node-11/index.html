@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Object Detection — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-11&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Object Detection</div>
   <p class="eyebrow">Computer Vision</p>
   <h1>Object Detection</h1>
@@ -91,16 +119,28 @@
     <span class="badge mono">Computer Vision</span>
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      이미지 내에서 객체의 위치(바운딩 박스)와 클래스를 동시에 찾아내는 컴퓨터 비전 과제. R-CNN 계열, YOLO 계열 등 2-stage/1-stage 접근으로 발전해왔다.
+      <p>객체 감지(Object Detection)는 디지털 이미지나 비디오에서 사람, 자동차, 동물 같은 특정 클래스의 객체 인스턴스를 찾아내는 컴퓨터 비전 기술이다. 단순히 이미지 전체에 하나의 클래스 레이블을 붙이는 이미지 분류나, 각 픽셀에 의미 범주만 매기는 시맨틱 분할과 달리, 객체 감지는 이미지나 비디오 안에서 개별 객체의 위치를 경계 상자(bounding box)로 찾아내고 동시에 그 클래스를 분류한다. 이 고유한 위치 파악 능력 덕분에 객체를 세거나 이후 프레임에서 추적하는 후속 작업이 가능해지며, 이미지 검색, 비디오 감시, 자율주행, 로봇공학 등 다양한 분야의 토대가 된다.</p>
+      <p>딥러닝이 본격적으로 도입되기 전에는 객체 감지가 주로 사람이 직접 설계한 특징과 분류기에 의존했다. 대표적으로 Haar-like 특징과 AdaBoost 분류기의 캐스케이드로 얼굴을 감지하는 Viola-Jones 알고리즘, 그리고 그래디언트 방향의 분포로 형태와 외관을 포착해 보행자 감지 등에 쓰인 HOG(Histogram of Oriented Gradients) 특징 기반 방법이 있었다. 이런 수작업 특징 기반 접근은 특정 작업에서는 빠르고 효율적이었지만, 다양한 장면과 객체 형태로 일반화하는 데에는 한계가 뚜렷했다.</p>
+      <p>2012년 ImageNet Challenge에서 AlexNet이 보여준 성과를 계기로 합성곱 신경망(CNN)이 컴퓨터 비전 전반의 표준으로 자리잡았고, 객체 감지 역시 CNN 기반 딥러닝 방법으로 빠르게 전환되었다. 이후 딥러닝 기반 객체 감지는 크게 2-stage 방식과 1-stage 방식으로 갈라져 발전했다. 2-stage 방식은 R-CNN에서 출발해 Fast R-CNN, Faster R-CNN으로 이어지며, 먼저 객체가 있을 법한 영역을 제안한 뒤 각 영역을 분류하고 경계 상자를 정교화하는 두 단계를 거친다. 이 방식은 상대적으로 정확도가 높지만 속도가 느리고 구조가 복잡하다는 단점이 있다.</p>
+      <p>반면 YOLO(You Only Look Once), SSD(Single Shot Detector), RetinaNet 같은 1-stage 방식은 영역 제안 단계 없이 하나의 신경망으로 경계 상자와 클래스를 곧바로 예측한다. YOLO는 이미지를 격자로 나누고 각 셀에서 경계 상자와 클래스 확률을 한 번의 신경망 통과로 예측해 속도와 효율성이 뛰어나며, RetinaNet은 Focal Loss를 도입해 배경과 객체 간 클래스 불균형 문제를 완화함으로써 1-stage 방식임에도 높은 정확도를 확보했다. 일반적으로 1-stage 방식은 2-stage 방식보다 빠르지만 정확도와 재현율 면에서는 다소 뒤처지는 경향이 있어, 두 계열은 속도와 정확도 사이의 상반된 선택지로 함께 발전해왔다.</p>
+      <p>최근에는 DETR(Detection Transformer)처럼 트랜스포머의 셀프 어텐션과 교차 어텐션 메커니즘을 활용해, 영역 제안이나 앵커 박스, 비최대 억제(NMS) 같은 수작업 구성 요소 없이 집합 예측 방식으로 객체를 감지하는 접근도 등장했다. 이처럼 객체 감지는 수작업 특징 기반 방법에서 CNN 기반 2-stage/1-stage 방법을 거쳐 트랜스포머 기반 방법으로 계속 발전하고 있으며, 각 접근은 정확도, 속도, 구조적 단순성 사이에서 서로 다른 균형점을 제시한다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>R-CNN · YOLO · SSD</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>R-CNN · YOLO · SSD</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>Computer Vision</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#cv</span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

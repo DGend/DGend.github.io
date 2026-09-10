@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cognitive Science — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-25&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Cognitive Science</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>Cognitive Science</h1>
@@ -91,16 +119,29 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      인간의 사고, 기억, 지각, 언어 처리 과정을 연구하는 학문. AI 설계(특히 추론·기억 구조)에 이론적 영감을 제공하는 인접 분야다.
+      <p>인지 과학은 생각, 경험, 감각을 통해 지식과 이해를 얻는 정신적 과정을 연구하는 학제간 학문이다. 언어, 지각, 기억, 주의, 추론, 감정 같은 정신적 능력을 다루며, 심리학, 신경과학, 언어학, 철학, 인류학, 컴퓨터 과학이 서로 다른 관점에서 이를 분석한다. 핵심 전제는 사고를 정신의 표상 구조와 그 구조 위에서 작동하는 계산 절차로 이해할 수 있다는 것이다. 전화번호를 기억했다가 나중에 떠올리는 단순한 예 하나만 보더라도, 행동 관찰만으로는 그 과정을 완전히 설명할 수 없고 신경 단위의 발화를 함께 살펴봐야 하듯, 인지 과학은 단일 수준의 분석만으로는 마음을 온전히 이해할 수 없다는 원칙 위에 서 있다.</p>
+      <p>인지 과학이 다루는 범위는 넓다. 주의는 수많은 자극 중 처리할 정보를 선별하는 과정이고, 언어 처리는 소리 패턴에서 문장의 의미에 이르기까지 여러 층위를 포괄하며, 학습과 발달은 유전과 환경이 함께 작용하는 과정이다. 기억은 장기 기억과 단기 기억, 선언적 기억과 절차적 기억으로 구분되고, 지각은 감각 신호를 조직하고 해석해 환경을 이해하는 과정이다. 의식은 여전히 정의하기 어려운 주제로 남아 있으며, 각성 상태, 지각적 인식, 주관적 관점, 자기 인식 같은 하위 현상들로 나뉘어 연구된다. 최근에는 체화된 인지 이론이 부각되면서, 자세와 운동 제어, 자율신경 과정, 신체와 환경의 상호작용이 인지에서 차지하는 역할이 강조되고 있다.</p>
+      <p>인지 과학은 마음에 대한 기능주의적 관점, 즉 정신 상태와 과정을 그것이 수행하는 기능으로 설명하는 입장과 밀접하게 연결된다. 기능주의의 다중 실현 가능성 개념에 따르면 로봇이나 컴퓨터 같은 비인간 시스템도 원리적으로 인지를 가질 수 있다고 본다. 이는 정신과 신체를 뚜렷이 구분하는 데카르트적 이원론에 대한 대안이며, 인지 과학과 인공지능이 긴밀하게 얽혀 서로의 역량과 지식을 향상시키는 배경이기도 하다.</p>
+      <p>이 연결이 특히 두드러지는 지점이 체화된 AI(Embodied AI)다. 체화된 AI는 물리적 환경과 상호작용하는 에이전트에 초점을 맞추고, 감각과 운동의 결합, 상황 속 지능을 강조한다. 고양이 새끼를 이용한 고전적 실험은 수동적으로 관찰만 한 개체보다 스스로 움직이며 환경과 상호작용한 개체가 정상적인 시각 발달을 보였음을 보여주었는데, 이는 체화된 상호작용이 인지 능력 형성에 핵심적임을 시사한다. 인터넷에서 수집한 뒤섞이고 무작위화된 데이터로 학습하는 기존 방식과 달리, 인간은 세상을 보고 움직이고 상호작용하며 순차적인 경험을 통해 학습한다. 체화된 AI는 이러한 인간의 학습 방식을 모사하려는 시도이며, 시각적 항법, 접지된 언어 학습, 질의응답 등 다양한 과제를 통해 발전하고 있다.</p>
+      <p>인지 과학과 머신러닝이 교차하는 지점은 다양하다. 인지 모델은 의사결정과 정보 처리 과정을 근사해 인간 행동을 예측하는 데 쓰이며, 자연어 처리는 인간 언어를 이해하고 생성하는 알고리즘을 개발하면서 인지 과학의 통찰을 빌려온다. 인지 컴퓨팅은 머신러닝, 자연어 처리, 컴퓨터 비전 등을 결합해 인간의 사고 과정을 모방하는 시스템을 지향하며, 대량의 비정형 데이터에서 패턴과 통찰을 찾아내고 상호작용을 통해 계속 학습해 나간다.</p>
+      <p>결국 인지 과학은 인간의 사고, 기억, 지각, 언어 처리 과정을 연구하는 학문으로서, AI 설계 특히 추론과 기억 구조, 체화된 학습에 이론적 영감을 제공하는 인접 분야다. 인간 인지에 대한 이해가 깊어질수록 인공지능 시스템의 설계와 정렬 방식에도 새로운 방향이 열린다.</p>
     </div>
   </section>
 
   
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +156,17 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

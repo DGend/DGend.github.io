@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>X-Formers at OD — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-20&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / X-Formers at OD</div>
   <p class="eyebrow">Computer Vision</p>
   <h1>X-Formers at OD</h1>
@@ -91,16 +119,28 @@
     <span class="badge mono">Computer Vision</span>
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      트랜스포머 구조를 객체 탐지에 특화한 변형들(DETR 등). 앵커·NMS 같은 수작업 컴포넌트를 제거하고 집합 예측 문제로 재정의했다.
+      <p>자연어 처리에서 트랜스포머가 보여준 성능은 연구자들이 컴퓨터 비전 작업에서도 같은 구조를 탐색하도록 이끌었다. 전통적으로 시각 작업의 기본 모델은 합성곱 신경망(CNN)이었지만, Vision Transformer(ViT)는 셀프 어텐션 메커니즘을 활용해 CNN의 지역 수용 필드가 갖는 한계를 깨고 이미지 내 전역 종속성과 장거리 상호작용을 포착할 수 있음을 보여주었다. 이를 통해 이미지 분류, 객체 탐지, 이미지 생성 등 다양한 컴퓨터 비전 작업에서 성능 향상이 이루어졌다.</p>
+      <p>객체 탐지는 이미지 속 각 객체와 그 범주 주위에 경계 상자를 그려 위치를 찾고 인식하는 작업이다. 기존 탐지기는 대개 ResNet 계열처럼 ImageNet에서 사전 학습한 백본 네트워크로 특징을 추출한 뒤, 단일 단계 또는 2단계 구조로 경계 상자와 클래스 레이블을 예측했다. 이 과정에는 앵커 박스 생성과 비최대 억제(NMS) 같은 수작업 후처리 단계가 필요했고, 이는 파이프라인을 복잡하게 만드는 요인이었다.</p>
+      <p>DETR(DEtection TRansformer)은 객체 탐지를 집합 예측 문제로 재구성함으로써 이러한 앵커 생성과 NMS 후처리 단계를 제거한 최초의 트랜스포머 기반 탐지기다. 구조는 위치 인코딩을 포함한 백본 네트워크, 셀프 어텐션 기반 인코더, 그리고 학습된 객체 쿼리로 디코딩하는 디코더의 세 모듈로 이루어진다. 디코더는 다수의 객체 쿼리를 병렬로 처리해 예측을 만들고, 이분 매칭 알고리즘으로 실제 정답과 예측된 객체를 짝짓는다. Faster R-CNN 같은 2단계 CNN 탐지기에 견줄 만한 성능을 보였지만, 초기 DETR은 훈련 수렴이 매우 느리고(수백 에폭 필요) 작은 물체를 잘 탐지하지 못하는 한계를 지녔다.</p>
+      <p>이후 이 두 가지 문제를 해결하기 위해 수많은 후속 연구가 제안되었다. Deformable-DETR, Conditional-DETR, SMCA-DETR, TSP-DETR처럼 어텐션 범위를 예측된 객체 위치 주변으로 제한하거나 쿼리 설계를 개선해 수렴 속도를 높인 모델들이 있고, DINO나 DAB-DETR, DN-DETR처럼 노이즈 제거 학습이나 앵커 상자 형태의 쿼리를 도입해 정확도를 끌어올린 모델들도 이어졌다. 또한 WB-DETR처럼 CNN 백본 없이 순수 트랜스포머만으로 동작하는 시도나, PnP-DETR처럼 배경 영역의 중복 연산을 줄여 효율을 높인 접근도 제안되었다.</p>
+      <p>이러한 개선들은 크게 백본 및 기본 모듈 수정, 쿼리 설계 전략, 어텐션 메커니즘 개선이라는 세 방향으로 정리할 수 있다. 결과적으로 X-Formers 계열 연구들은 원래 DETR이 가진 느린 수렴과 소형 객체 탐지 약점을 크게 개선하면서, 트랜스포머가 객체 탐지 영역에서 CNN 기반 접근을 대체할 수 있는 실질적인 대안임을 입증해 왔다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>Carion et al., DETR (2020)</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>Carion et al., DETR (2020)</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>Computer Vision</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#cv</span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

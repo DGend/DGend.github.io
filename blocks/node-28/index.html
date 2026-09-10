@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ASI — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-28&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / ASI</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>ASI</h1>
@@ -91,16 +119,27 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      AGI를 넘어 인간의 지능을 모든 영역에서 능가하는 가상의 지능 수준. 실현 가능성과 안전성(정렬 문제)에 대한 논의가 함께 다뤄진다.
+      <p>초 인공지능(Artificial Super Intelligence, ASI)은 컴퓨터의 인지 능력이 인간을 능가하는 단계를 가리키는 개념이다. 인공지능은 흔히 세 단계로 구분되는데, 특정 과업만 잘 수행하는 협소 인공지능(ANI, 약한 AI), 인간과 동등한 수준으로 폭넓은 문제를 해결할 수 있는 범용 인공지능(AGI, 강한 AI), 그리고 이 AGI를 넘어서 거의 모든 관심 영역에서 인간의 지능을 뚜렷이 능가하는 초 인공지능(ASI)이 그것이다. 현재 인공지능 연구는 대부분 ANI 수준에 머물러 있으며, ASI는 아직 실현된 기술이 아니라 이론적 가능성으로 논의되는 단계다.</p>
+      <p>ASI를 정의할 때 자주 인용되는 닉 보스트롬(Nick Bostrom)의 표현에 따르면, 초지능이란 과학적 창의성, 일반적 지혜, 사회적 기술을 포함해 거의 모든 영역에서 인간의 인지 능력을 크게 뛰어넘는 지능이다. 이런 존재는 자기 인식을 가지고 정보를 더 빠르게 처리하고 유지하며, 인간이 개념화하기 어려운 수준의 추상화와 해석을 다룰 수 있을 것으로 그려진다. 또한 단순히 계산 능력이 뛰어난 데 그치지 않고, 감정적 이해나 신념, 욕구 같은 인간적 속성까지 스스로 형성할 수 있는 존재로 상정된다.</p>
+      <p>ASI로 가는 경로는 범용 인공지능(AGI)의 개발을 전제로 한다. AGI가 모든 인지적 측면에서 인간 수준의 추상적 사고, 추론, 문제 해결 능력을 갖춘 기계를 의미한다면, ASI는 그 AGI가 재귀적 자기 개선 등을 거쳐 인간의 한계를 넘어서는 단계로 이해된다. 다만 전문가들 사이에서도 ASI의 실현 가능성과 시기에 대해서는 회의적인 시각이 많고, 일부 연구자는 인간이 초지능을 통제하는 것 자체가 근본적으로 어려울 수 있다고 지적한다.</p>
+      <p>ASI 개념은 오랫동안 통제 문제(control problem)와 결합되어 논의되어 왔다. 닉 보스트롬은 저서 Superintelligence에서 참새들이 올빼미를 길들이려 하지만 정작 올빼미를 어떻게 통제할지는 답하지 못한다는 우화를 들어, 인간이 초지능을 만든 뒤 그것을 제어할 방법을 갖추지 못할 위험을 경고했다. 이런 문제의식은 초지능이 인류를 위협하거나 대체할 수 있다는 디스토피아적 서사의 토대가 되었고, 동시에 정렬(alignment) 문제, 즉 초지능의 목표를 인간의 가치와 일치시키는 문제에 대한 진지한 연구로 이어지고 있다.</p>
     </div>
   </section>
 
   
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +154,17 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

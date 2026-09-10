@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RL — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-5&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / RL</div>
   <p class="eyebrow">Reinforcement Learning</p>
   <h1>RL</h1>
@@ -91,16 +119,28 @@
     <span class="badge mono">Reinforcement Learning</span>
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      에이전트가 환경과 상호작용하며 보상을 최대화하는 행동 정책을 시행착오로 학습하는 패러다임. 정답 레이블 대신 보상 신호로 학습한다는 점에서 지도/비지도학습과 구분된다.
+      <p>강화 학습은 지능형 에이전트가 환경과 상호작용하면서 누적 보상을 극대화하도록 행동을 학습하는 기계 학습의 한 영역으로, 지도 학습 및 비지도 학습과 함께 기계 학습의 세 가지 기본 패러다임 중 하나로 다뤄진다. 지도 학습이 정답이 주어진 입력과 출력 쌍으로부터 배우는 것과 달리, 강화 학습에서는 에이전트가 어떤 행동을 해야 하는지 직접 지시받지 않고 시행착오를 통해 가장 많은 보상을 주는 행동을 스스로 찾아내야 한다. 행동이 즉각적인 보상뿐 아니라 이후의 상황과 보상에까지 영향을 미칠 수 있다는 점에서, 시행착오적 탐색과 지연된 보상이라는 두 특성이 강화 학습을 다른 학습 방식과 구분 짓는 핵심 요소다. 이 문제는 흔히 마르코프 결정 과정, 즉 MDP의 형태로 형식화되며, 고전적인 동적 프로그래밍과 달리 강화 학습은 환경에 대한 정확한 수학적 모델을 가정하지 않고 모델이 없거나 규모가 커서 정확한 계산이 불가능한 상황을 다룬다는 점에서 차이가 있다.</p>
+      <p>강화 학습이라는 접근이 등장한 배경에는, 사람이나 동물이 환경과의 직접적인 상호작용을 통해 원인과 결과, 행동의 결과를 배운다는 관찰이 있다. 이런 상호작용을 통한 학습이라는 발상을 인공지능 연구자의 관점에서 이상화하여, 감각과 행동과 목표라는 세 가지 요소만으로 학습 문제를 정식화한 것이 강화 학습이다. 강화 학습은 특정한 학습 방법이 아니라 학습해야 할 문제 자체를 정의하는 개념이며, 에이전트는 환경의 상태를 어느 정도 감지하고 그 상태에 영향을 주는 행동을 선택할 수 있어야 하고, 환경 상태와 관련된 목표를 가져야 한다. 또한 강화 학습은 부분적 하위 문제에 국한되지 않고, 불확실한 환경 속에서 목표를 추구하는 완전하고 상호작용적인 에이전트 전체를 다룬다는 점에서 다른 기계 학습 접근과 차별화되며, 최적 제어 이론이나 확률적 근사와 같은 여러 분야의 아이디어를 확장하는 학제적 성격을 갖는다.</p>
+      <p>강화 학습 고유의 근본적인 난제는 탐색과 활용 사이의 균형이다. 에이전트는 이미 효과가 있다고 알려진 행동을 활용하여 보상을 얻어야 하지만, 동시에 더 나은 행동을 발견하기 위해 아직 시도하지 않은 행동을 탐색해야 한다. 지나친 탐색은 시간과 자원을 낭비시키고, 지나친 활용은 더 나은 대안을 놓치거나 지역 최적에 갇히게 만든다. 이 균형을 정량화하는 개념이 후회이며, 최적 행동의 기대 보상과 실제로 선택한 행동의 보상 간 차이로 정의된다. 이를 다루는 대표적인 방법으로 일정 확률로 무작위 행동을 선택하고 나머지는 최선의 행동을 선택하는 엡실론 탐욕 방법, 추정 보상에 비례한 확률로 행동을 선택하는 소프트맥스, 각 행동의 추정 보상 상한과 시도 횟수에 따른 보너스를 함께 고려하는 상한 신뢰 구간 방법, 그리고 보상에 대한 사후 분포에서 표본을 뽑아 행동을 선택하는 톰슨 샘플링 등이 있다. 이러한 탐색, 활용 딜레마를 가장 단순한 형태로 보여주는 문제가 여러 슬롯머신 중 최적의 것을 찾는 멀티암드 밴딧 문제다.</p>
+      <p>행동 선택을 정형화하기 위해 정책이라는 개념이 사용되며, 정책은 상태에서 행동으로의 매핑으로 정의된다. 어떤 상태에서 특정 정책을 따랐을 때 기대되는 누적 보상을 가치 함수라 하고, 상태와 행동의 조합에 대해 정의된 것은 행동 가치 함수라 부른다. 이론적으로 이러한 최적 가치 함수를 계산하는 두 가지 기본 방법이 동적 프로그래밍에 기반한 가치 반복과 정책 반복이다. 가치 반복은 벨만 방정식을 이용해 모든 상태의 가치를 반복적으로 갱신해 수렴시키는 방식이고, 정책 반복은 주어진 정책을 평가하는 단계와 그 가치 함수를 기준으로 정책을 탐욕적으로 개선하는 단계를 번갈아 수행하는 방식이다. 다만 이런 완전한 계산은 상태 공간이 커지면 비현실적이므로, 실제 강화 학습에서는 표본 평균과 함수 근사를 통해 기댓값을 근사한다. 몬테카를로 방법은 에피소드가 끝난 뒤 얻은 수익을 평균 내어 가치를 추정하지만 에피소드 문제에만 적용되고 수렴이 느릴 수 있다는 한계가 있고, 시간차 학습은 에피소드가 끝나기를 기다리지 않고 매 단계마다 예측 오차를 이용해 가치 추정치를 갱신함으로써 동적 프로그래밍과 몬테카를로 방법의 장점을 결합한다. SARSA와 큐러닝이 이러한 시간차 방법을 대표하는 알고리즘이며, 상태나 행동 공간이 매우 크거나 연속적인 경우에는 함수 근사를 통해 가치 함수나 정책을 매개변수화된 함수로 표현한다.</p>
+      <p>가치 함수를 거치지 않고 정책 공간에서 직접 최적의 정책을 탐색하는 방법도 있는데, 이는 그레이디언트를 이용하는 정책 경사 방법과 그레이디언트를 사용하지 않는 방법으로 나뉜다. 또한 환경의 상태 전이와 보상 구조에 대한 모델을 먼저 학습한 뒤 이를 이용해 계획을 세우는 모델 기반 강화 학습도 있으며, 이는 실제 환경과의 상호작용 없이도 모델 안에서 다양한 행동의 결과를 시뮬레이션할 수 있어 표본 효율성을 크게 높일 수 있는 방향으로 주목받고 있다. 마르코프 결정 과정이라는 수학적 틀은 상태, 행동, 전이 확률, 보상, 할인율로 구성되며, 벨만 방정식은 어떤 상태나 상태, 행동 쌍의 가치를 즉각적인 보상과 다음 상태의 할인된 가치의 합으로 표현함으로써 복잡한 다단계 최적화 문제를 더 단순한 하위 문제들로 쪼개어 풀 수 있게 해주는 원리로 기능한다. 이 밖에도 연관 규칙 학습과 결합된 연관 강화 학습, 심층 신경망을 이용해 상태 공간을 수작업으로 설계하지 않고 학습하는 심층 강화 학습, 적대적 상황을 다루는 적대적 심층 강화 학습, 모호한 보상이나 상태를 다루는 퍼지 강화 학습, 전문가의 시연으로부터 보상 함수 자체를 역으로 추정하는 역강화 학습, 안전 제약을 고려하는 안전 강화 학습 등 여러 변형이 함께 소개된다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>Q-learning · TD-learning</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>Q-learning · TD-learning</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>Reinforcement Learning</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#rl</span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

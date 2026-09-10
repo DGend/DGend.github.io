@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Artificial Intelligence — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-1&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Artificial Intelligence</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>Artificial Intelligence</h1>
@@ -91,16 +119,28 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      인간의 지능적 행동(추론, 학습, 지각, 언어 이해)을 기계로 구현하려는 연구 분야 전체를 가리킨다. 튜링의 "기계가 생각할 수 있는가"라는 질문에서 출발해, 규칙 기반 시스템부터 현대의 딥러닝·LLM까지 모든 하위 분야를 포괄하는 최상위 개념이다.
+      <p>인공지능이란 인간이 아닌 기계가 보여주는 지능, 즉 정보를 인식하고 종합하고 추론하는 능력을 가리킨다. 넓은 의미로는 기계, 특히 컴퓨터 시스템이 환경을 인식하고 학습과 추론을 통해 주어진 목표를 달성할 가능성을 최대화하는 방법과 소프트웨어를 연구하고 개발하는 컴퓨터 과학의 한 분야다. 인공지능은 지능과 인공성이 결합된 개념으로, 자연적으로 발생하는 능력이 아니라 인간이 의도적으로 만들어낸 결과물이라는 점에서 인간 지능과 구분된다.</p>
+      <p>인공지능 연구는 형식 논리와 계산 이론에 대한 오랜 탐구에서 출발했다. 앨런 튜링의 계산 이론과 처치, 튜링 논제는 기계가 간단한 기호 조작만으로 모든 형식적 추론을 시뮬레이션할 수 있음을 보였고, 1956년 다트머스 회의를 계기로 AI는 독립된 학문 분야로 자리잡았다. 이후 상징적 접근(GOFAI)과 신경망 기반의 연결주의적 접근이 번갈아 주도권을 잡으며 여러 차례의 낙관과 'AI 겨울'이라 불리는 침체기를 거쳤고, 2012년 무렵부터는 대량의 데이터와 계산 자원을 활용하는 딥러닝이 성능 벤치마크를 주도하면서 다시 폭발적인 관심을 받게 되었다.</p>
+      <p>AI 연구는 추론과 문제 해결, 지식 표현, 기계학습, 자연어 처리, 지각(perception), 사회적 지능, 일반 지능(AGI) 등 여러 하위 목표로 나뉜다. 이를 달성하기 위해 탐색과 최적화, 논리, 불확실성 하의 확률적 추론, 통계적 분류기, 인공신경망과 딥러닝, 트랜스포머 구조에 기반한 대규모 언어 모델 등 다양한 기법이 개발되고 결합되어 왔다. 특히 기계학습은 지도학습, 비지도학습, 강화학습 등으로 나뉘며 경험으로부터 자동으로 성능을 향상시키는 알고리즘을 연구하는 분야로, 오늘날 AI 연구의 중심축을 이루고 있다.</p>
+      <p>철학적으로는 인공지능을 어떻게 정의할 것인가, 상징적 접근과 신경망 기반 접근 중 무엇이 더 타당한가, 기계가 의식이나 마음을 가질 수 있는가와 같은 질문이 오랫동안 논쟁이 되어왔다. 미래를 전망하는 논의에서는 인간의 인지 능력을 넘어서는 초지능, 기술과 인간이 결합하는 트랜스휴머니즘, 그리고 되돌릴 수 없는 기술적 도약을 뜻하는 기술적 특이점 같은 개념이 다뤄진다.</p>
+      <p>동시에 AI의 확산은 개인정보와 저작권 침해, 알고리즘 편향, 설명 불가능성, 노동 대체, 실존적 위험 등 다양한 윤리적 쟁점을 동반하기 때문에, 개발자와 정책 결정자가 안전과 투명성, 책임성을 고려한 규범을 마련하는 것이 중요한 과제로 떠올랐다. 오늘날 AI는 의료, 금융, 교육, 로보틱스, 자율주행, 검색과 추천 시스템 등 산업 전반에 걸쳐 실질적으로 활용되고 있으며, 그 적용 범위가 넓어질수록 다른 학문 및 산업 분야와의 접점도 계속 확장되고 있다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>Turing, &quot;Computing Machinery and Intelligence&quot; (1950)</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>Turing, &quot;Computing Machinery and Intelligence&quot; (1950)</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 <title>AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3;
@@ -368,9 +369,18 @@
     font-size:11.5px;
     font-family:'IBM Plex Mono', monospace;
   }
+
+  /* ---- embed mode: bare tree only, used when this page is loaded inside
+     a block detail page's iframe preview (?embed=1) ---- */
+  .page.embed{ padding:8px; max-width:none; }
+  .page.embed header,
+  .page.embed .domain-bar{ display:none; }
+  .page.embed .tree-wrap{ margin-top:0; border:0; background:transparent; }
+  .page.embed .node{ pointer-events:none; }
 </style>
 
-<div class="page">
+<div id="site-topbar"></div>
+<div class="page" id="page">
   <header>
     <div>
       <p class="eyebrow">AI Field Map — Tech Tree · 2026 Update</p>
@@ -1388,5 +1398,27 @@
   allNodes.forEach(function(n){
     n.addEventListener('click', function(){ if(activeDomain) clearDomainFilter(); });
   });
+
+  // ---- deep-link focus + embed mode: lets a block detail page embed this
+  // tree (via iframe src="../../index.html?focus=<id>&embed=1") pre-scrolled
+  // to and highlighting the path down to that node. Reuses selectNode() as-is.
+  var qs = new URLSearchParams(location.search);
+  if(qs.get('embed')){
+    document.getElementById('page').classList.add('embed');
+    var topbar = document.getElementById('site-topbar');
+    if(topbar) topbar.style.display = 'none';
+  }
+  var focusId = qs.get('focus');
+  if(focusId && document.getElementById(focusId)){
+    selectNode(focusId);
+    var focusEl = document.getElementById(focusId);
+    requestAnimationFrame(function(){
+      focusEl.scrollIntoView({block:'center', inline:'center'});
+    });
+  }
+  var domainParam = qs.get('domain');
+  if(domainParam) setDomainFilter(domainParam);
 })();
 </script>
+<script src="./assets/nodes-index.js"></script>
+<script src="./assets/site-chrome.js"></script>

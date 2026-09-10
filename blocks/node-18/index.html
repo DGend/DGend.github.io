@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LLMs — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-18&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / LLMs</div>
   <p class="eyebrow">NLP / LLM</p>
   <h1>LLMs</h1>
@@ -91,16 +119,28 @@
     <span class="badge mono">NLP / LLM</span>
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      수천억 파라미터급 트랜스포머를 대규모 텍스트 코퍼스로 사전학습한 언어모델. 다음 토큰 예측만으로 in-context learning, 지시 이행 등 예상 밖의 능력(emergent ability)이 나타난 것이 특징이다.
+      <p>사전학습 언어모델(PTM)과 거대 언어모델(LLM)의 경계는 명확하지 않지만, 대체로 파라미터 수가 10억 개를 넘고 사전학습만으로도 프롬프트 조정을 통해 다양한 작업을 수행할 수 있는 모델을 LLM으로 구분한다. LLM은 PTM에서 다루는 개념을 그대로 이어받는 상위 개념이며, 여기에 대규모화에 따른 엔지니어링 요소가 추가된다.</p>
+      <p>언어모델 학습은 크게 사전학습과 미세조정 두 단계로 이루어진다. 사전학습은 방대한 비정형 텍스트 코퍼스에서 자기 지도 방식으로 일반적인 언어 표현을 학습하는 과정으로, 막대한 연산 자원이 필요하다. 미세조정은 이렇게 얻은 사전학습 모델을 감성 분석, 질의응답, 요약 등 특정 작업에 맞는 소규모 데이터셋으로 추가 학습시켜 처음부터 학습하는 것보다 훨씬 적은 비용으로 과제에 적응시키는 과정이다.</p>
+      <p>LLM은 일반적인 언어 생성과 분류 등 다양한 자연어 처리 작업을 수행하는 계산 모델로, 자기 지도 및 준지도 학습을 통해 방대한 텍스트에서 통계적 관계를 학습한다. 입력 텍스트를 받아 다음 토큰을 반복적으로 예측하는 방식으로 텍스트를 생성하며, 2017년 제안된 트랜스포머 아키텍처, 그중에서도 주로 디코더 전용 구조를 기반으로 한다. 2020년 이전에는 특정 작업에 모델을 적용하는 주된 방법이 미세조정이었으나, GPT-3처럼 규모가 커진 모델은 입력 프롬프트를 설계하는 프롬프트 엔지니어링만으로도 유사한 성능을 낼 수 있음을 보여주었다. 다만 이런 모델은 인간 언어 코퍼스에 담긴 구문, 의미, 지식을 학습하는 동시에 그 데이터에 내재된 부정확성과 편향도 함께 물려받는다.</p>
+      <p>대표적인 LLM으로는 OpenAI의 GPT 계열, Google의 Gemini, Meta의 LLaMA, Anthropic의 Claude, Mistral AI의 모델 등이 있다. 이들은 모두 딥러닝 기법으로 방대한 텍스트 데이터를 학습한 고도화된 언어모델이며, 단순히 단어 시퀀스에 확률을 부여하던 초기의 n-gram 모델과 달리 수백만에서 수십억에 이르는 파라미터를 갖는다. 텍스트 생성뿐 아니라 번역, 요약, 코드 오류 탐지 등 폭넓은 작업에 활용된다.</p>
+      <p>LLM의 두드러진 특징 중 하나는 창발적 능력(emergent ability)이다. 이는 소규모 모델의 성능을 외삽해서는 예측할 수 없다가, 모델 규모가 특정 임계점을 넘는 순간 마치 상전이처럼 갑자기 나타나는 능력을 가리킨다. 산술 연산, 질의응답, 문단 요약처럼 별도의 설계 없이 자연어를 대규모로 학습하는 것만으로 생겨나는 능력이 대표적이다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>BERT · GPT</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>BERT · GPT</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>NLP / LLM</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#nlp</span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

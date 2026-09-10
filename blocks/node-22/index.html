@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Multi-Modal Learning — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-22&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Multi-Modal Learning</div>
   <p class="eyebrow">Generative / Multi-Modal</p>
   <h1>Multi-Modal Learning</h1>
@@ -91,16 +119,28 @@
     <span class="badge mono">Generative / Multi-Modal</span>
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      텍스트·이미지·오디오 등 서로 다른 모달리티를 하나의 표현 공간에서 함께 학습·정렬하는 분야. CLIP처럼 모달리티 간 대응 관계를 학습해 크로스모달 검색·생성을 가능하게 한다.
+      <p>멀티모달 학습은 텍스트, 이미지, 오디오, 비디오 등 서로 다른 유형의 데이터를 함께 다루는 딥러닝의 한 갈래다. 텍스트나 이미지 한 가지만 처리하는 유니모달 모델과 달리, 여러 모달리티의 정보를 결합해 더 나은 예측을 이끌어낸다. 이미지 하나만으로는 전달되지 않는 정보를 캡션이 보완하듯, 서로 다른 모달리티는 흔히 다른 정보를 실어 나르므로 이들을 공동으로 표현할 수 있는 모델이 필요하다. 의료 분야의 전자 건강 기록, 영상, 유전체 데이터나 마케팅 분야의 웹 분석, 리뷰, 거래 기록처럼 다양한 출처의 데이터를 통합하면 문제를 훨씬 포괄적으로 이해하고 더 정확하고 견고한 예측 모델을 만들 수 있다.</p>
+      <p>기존의 합성곱 신경망이나 순환 신경망 같은 유니모달 모델은 이미지나 텍스트 등 단 하나의 입력만 처리하도록 설계되어, 실제 데이터가 담고 있는 전체 맥락을 포착하는 데 한계가 있다. 예를 들어 암과 같은 복잡한 질병은 유전체 데이터 하나만으로는 진행을 정확히 예측하기 어렵고, 조직병리·방사선·유전체·임상 정보를 함께 결합해야 포괄적인 이해가 가능하다. 멀티모달 머신러닝은 이렇게 서로 다른 데이터 소스 간의 관계와, 단일 모달리티로는 찾기 어려운 패턴을 함께 식별한다. 대표적으로 쓰이는 모달리티는 시각(이미지·비디오), 텍스트, 청각(음성·소리·음악)이며, 3D 데이터나 LiDAR, 의료 영상, 뇌파 같은 센서 데이터도 포함된다.</p>
+      <p>멀티모달 AI 아키텍처는 대체로 각 입력 모달리티를 처리하는 유니모달 인코더, 서로 다른 모달리티의 특성을 결합하는 퓨전 네트워크, 결합된 데이터를 바탕으로 예측을 수행하는 분류기의 세 요소로 구성된다. 이 원리는 멀티모달 에이전트로도 확장된다. 멀티모달 에이전트는 텍스트, 이미지, 오디오, 비디오 등 다양한 형태의 데이터를 이해하고 그 결과를 다시 여러 형식으로 생성할 수 있는 AI 구성 요소로, 목표 설정, 작업 목록 구성, 정보 수집, 메모리 저장, 피드백 수집이라는 반복적 과정을 통해 자율적으로 작업을 수행한다.</p>
+      <p>멀티모달 대규모 언어 모델은 모달리티 인코더, 입력 프로젝터, LLM 백본, 출력 프로젝터, 모달리티 생성기라는 다섯 구성 요소로 이루어진다. 각 모달리티의 인코더가 데이터를 표현으로 변환하면 입력 프로젝터가 이를 공유 임베딩 공간으로 투사하고, LLM 백본이 이 표현을 바탕으로 텍스트 등의 출력을 생성하며, 필요하면 출력 프로젝터와 모달리티 생성기가 이를 이미지나 오디오 같은 목표 형식으로 되돌린다. 학습은 보통 모달 간 정렬을 맞추는 사전 학습과, 사람이 만든 지시-응답 데이터로 다중 모달 지시를 따르는 능력을 키우는 지시 튜닝의 두 단계로 진행된다.</p>
+      <p>여러 모달리티를 결합하는 학습 기법은 크게 세 갈래로 나뉜다. 퓨전 기반 접근은 각 모달리티의 특징을 초기 또는 중간 단계에서 통합해 하나의 공유 표현으로 만들며, 정렬 기반 접근은 동적 시간 워핑, 정준 상관 분석, 교차 모달 오토인코더, 조인트 임베딩 같은 기법으로 모달리티 간 표현을 서로 대응시키면서도 각 모달리티 고유의 특성을 보존한다. 후기 융합은 각 모달리티를 끝까지 독립적으로 처리해 개별 예측을 얻은 뒤 평균이나 가중합 방식으로 최종 결과만 결합하는 방식이다. 한편 멀티모달 LLM에서도 생성된 텍스트가 실제 이미지 내용과 어긋나는 환각 문제가 발생하는데, 이는 객체 범주나 속성, 관계를 잘못 기술하는 형태로 나타나며 학습 데이터의 한계나 외부 정답의 부재에서 비롯된다. 이를 줄이기 위해 인간 피드백 기반 강화학습, 도메인별 미세 조정, 적대적 훈련, 다른 모달리티를 추가로 결합해 근거를 보강하는 방법 등이 연구되고 있다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>CLIP · BLIP</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>CLIP · BLIP</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>Generative / Multi-Modal</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#gen</span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

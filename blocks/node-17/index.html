@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Generative AI — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-17&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Generative AI</div>
   <p class="eyebrow">Generative / Multi-Modal</p>
   <h1>Generative AI</h1>
@@ -91,16 +119,28 @@
     <span class="badge mono">Generative / Multi-Modal</span>
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      판별(분류) 대신 새로운 데이터를 만들어내는 모델군. GAN, VAE, 확산모델(Diffusion), 오토리그레시브 모델 등을 포괄하며 이미지·텍스트·오디오 생성으로 응용이 확장되었다.
+      <p>생성 모델은 주어진 데이터 집합의 기본 패턴이나 분포를 학습해 그와 유사한 새로운 데이터를 만들어내는 머신러닝 모델이다. 데이터가 서로 다른 범주 사이의 경계를 학습해 분류하는 판별 모델과 달리, 생성 모델은 데이터 자체가 어떻게 만들어지는지를 이해하려 한다. 예를 들어 고양이와 개 사진을 학습한 생성 모델은 각 동물이 왜 그렇게 보이는지를 포착해 새로운 고양이나 개 이미지를 만들어낼 수 있다. 생성형 AI(GenAI)는 이러한 생성 모델을 활용해 프롬프트에 응답하는 형태로 텍스트, 이미지, 비디오 등 다양한 콘텐츠를 만드는 인공지능을 가리키며, 2010년대 중반 GAN의 등장과 2020년대 초 트랜스포머 기반 대규모 언어 모델의 발전을 거치며 대중화되었다.</p>
+      <p>생성형 AI의 학습 과정은 대체로 다음 단계를 따른다. 먼저 생성하려는 종류의 데이터를 대량으로 수집하고, 노이즈 제거와 정규화, 토큰화 같은 전처리를 거친다. 이렇게 준비된 데이터를 신경망 아키텍처에 노출시켜 데이터 내부의 패턴과 상관관계를 학습시킨다. 학습이 끝나면 모델은 무작위 노이즈나 프롬프트를 입력받아 학습된 분포에서 새로운 샘플을 생성하고, BLEU나 FID 같은 지표와 주관적 평가로 결과물의 품질을 검증한 뒤 미세조정을 반복해 성능을 개선한다.</p>
+      <p>대표적인 초기 아키텍처인 변이 오토인코더(VAE)는 인코더와 디코더로 구성된다. 인코더는 입력 데이터를 하나의 고정값이 아니라 잠재 공간 위의 확률 분포로 매핑하고, 디코더는 이 잠재 공간에서 샘플링한 점을 원래 데이터 공간으로 복원한다. 입력을 단일 지점이 아닌 분포에 대응시킴으로써 잠재 공간이 매끄럽게 연속되어, 그 사이를 보간하면 원본과 비슷하면서도 조금씩 다른 새로운 데이터를 만들어낼 수 있다. VAE는 재구성 손실과 KL 발산이라는 두 가지 목표를 함께 최적화하며 학습된다.</p>
+      <p>생성적 적대 신경망(GAN)은 2014년 Ian Goodfellow가 제안한 구조로, 생성자와 판별자라는 두 신경망이 제로섬 게임 형태로 경쟁하며 학습한다. 생성자는 무작위 노이즈로부터 실제와 구별되지 않는 데이터를 만들어내려 하고, 판별자는 진짜 데이터와 생성된 가짜 데이터를 구별하려 한다. 이 경쟁이 반복되면서 두 네트워크는 함께 발전하며, 판별자가 더 이상 진위를 가려내지 못하는 지점까지 생성자의 출력 품질이 높아진다. 일반적으로 GAN은 VAE보다 더 선명하고 사실적인 결과를 만들어내지만 학습이 불안정하고 느린 반면, VAE는 학습이 안정적이고 잠재 공간을 해석하고 조작하기 쉽다는 장점이 있다.</p>
+      <p>이후 확산 모델과 트랜스포머 기반 아키텍처가 등장하며 생성형 AI는 한층 더 발전했다. 확산 모델은 데이터에 점진적으로 노이즈를 더하는 순방향 과정과 그 노이즈를 단계적으로 제거해 데이터를 복원하는 역방향 과정을 학습해 고품질 이미지, 비디오 등을 생성하며 DALL-E 2, Stable Diffusion, Sora 같은 서비스의 기반이 되었다. 한편 대규모 언어 모델(LLM)은 트랜스포머 구조와 어텐션 메커니즘을 이용해 방대한 텍스트에서 단어 간 연관성을 학습함으로써 문장·코드 등 다양한 콘텐츠를 생성한다. 이러한 발전은 소프트웨어 개발, 의료, 예술, 마케팅 등 여러 산업에 활용되지만, 편향된 출력이나 환각, 저작권·표절 문제 같은 윤리적 쟁점도 함께 제기되고 있다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>GAN · VAE · Diffusion</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>GAN · VAE · Diffusion</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>Generative / Multi-Modal</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#gen</span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

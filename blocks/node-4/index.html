@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Un-supervised Learning — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-4&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Un-supervised Learning</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>Un-supervised Learning</h1>
@@ -91,16 +119,28 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      레이블 없이 데이터 자체의 구조(군집, 밀도, 저차원 표현)를 찾아내는 학습 방식. 군집화·차원축소·이상탐지 등에 쓰이며, 이후 표현학습과 자기지도학습의 뿌리가 된다.
+      <p>비지도 학습은 태그가 지정되지 않은 데이터에서 패턴을 학습하는 알고리즘이다. 전문가가 데이터에 레이블을 붙이는 지도 학습과 달리, 확률 밀도나 신경망의 가중치와 활성화에 인코딩된 특성 선호의 조합으로 패턴을 스스로 포착하는 자기 조직화에 가깝다. 사람은 클러스터 개수 같은 하이퍼파라미터만 정해 주고, 모델은 사람의 감독 없이 방대한 데이터를 처리해 입력 레코드를 새로운 특성이나 유사한 패턴을 가진 집합으로 재구성한다. 세상에 존재하는 데이터의 대부분이 레이블 없는 원시 데이터이므로, 비지도 학습은 이런 데이터에서 통찰을 얻는 데 특히 강력한 도구가 된다.</p>
+      <p>비지도 학습이 다루는 목표는 상당히 넓다. 군집 분석(clustering)은 같은 그룹의 데이터가 다른 그룹보다 서로 더 유사하도록 객체 집합을 나누는 작업으로, 패턴 인식·이미지 분석·정보 검색 등 여러 분야에서 쓰이는 대표적 비지도 기법이다. 잠재 변수 모델은 관찰 가능한 변수들을 소수의 숨겨진 변수와 연결해, 노이즈를 걷어내고 데이터의 본질적 특성만 저차원으로 표현한다. 차원 축소는 고차원 데이터를 저차원 공간으로 옮기면서도 의미 있는 속성은 보존하는 기법으로, 차원의 저주로 인한 희소성과 과적합, 긴 학습 시간 문제를 완화한다.</p>
+      <p>이상 탐지는 대부분의 데이터와 크게 벗어나는 희귀한 관측치를 찾아내는 작업으로 보안, 의료, 금융 사기 탐지 등에 폭넓게 쓰이며, 레이블이 거의 없는 현실적 조건 때문에 비지도 방식이 가장 널리 쓰인다. 계층적 학습은 여러 층의 선형·비선형 변환을 거쳐 단순한 특성에서 복잡하고 추상적인 특성으로 나아가는 방식으로, 딥러닝과 인공신경망의 발전과 밀접하게 맞닿아 있다.</p>
+      <p>생성형 모델은 학습 데이터의 분포 자체를 학습해 그와 유사한 새로운 데이터를 만들어 내는 비지도 학습의 한 갈래다. 입력을 레이블에 매핑하는 판별적 모델과 달리, 데이터가 어떻게 생성되는지를 이해하는 데 초점을 둔다. 이 능력은 이미지 생성부터 자연어 합성에 이르기까지 폭넓게 쓰이며, 오늘날 대규모 언어 모델로 대표되는 생성형 AI의 근간이 되었다. 한편 표현 학습(representation learning)은 수작업 특성 설계를 대신해, 원시 데이터에서 분류나 탐지에 필요한 표현을 시스템이 스스로 찾아내게 하는 기법들을 가리키며, 비지도 학습과 자기지도 학습을 거쳐 계속 발전하고 있다.</p>
+      <p>은닉 마르코프 모델, 홉필드 네트워크, 볼츠만 머신, 주성분 분석, k-평균 군집화, 자기조직화 지도, 심층 신뢰망 등은 이러한 목표를 구현하는 대표적인 비지도 알고리즘들이다. 딥러닝 이전 시대에 정립된 이 알고리즘들은 이후 준지도 학습과 자기지도 학습 개념으로 이어지며, 표현 학습과 생성형 AI라는 오늘날의 흐름으로 발전해 왔다.</p>
     </div>
   </section>
 
-  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>MacQueen, k-means (1967)</li></ul></section>
+  <section id="sec-papers"><h2>대표 논문 / 모델</h2><ul class="papers"><li>MacQueen, k-means (1967)</li></ul></section>
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,18 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-papers">대표 논문 / 모델</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>

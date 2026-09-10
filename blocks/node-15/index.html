@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Self-supervised — AI 테크트리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../assets/site-chrome.css">
 <style>
   :root{
     --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
@@ -26,7 +27,7 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
-  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .page{ max-width:1040px; margin:0 auto; padding:40px 24px 100px; }
   .breadcrumb{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
     margin-bottom:18px;
@@ -78,10 +79,37 @@
     background:var(--card-bg);
   }
   .home-link:hover{ border-color:var(--accent); }
+
+  .tree-preview{
+    border:1px solid var(--line-soft); border-radius:10px; overflow:hidden;
+    background:var(--card-bg); box-shadow:var(--shadow); margin-bottom:24px;
+  }
+  .tree-preview iframe{
+    display:block; width:1600px; height:640px; border:0; transform-origin:top left;
+  }
 </style>
 </head>
 <body>
-<div class="page">
+<div id="site-topbar"></div>
+<div class="tree-preview" id="tree-preview">
+    <iframe src="../../index.html?focus=node-15&amp;embed=1" title="테크트리 내 위치 미리보기" loading="lazy"></iframe>
+  </div>
+  <script>
+  (function(){
+    var wrap = document.getElementById('tree-preview');
+    var frame = wrap.querySelector('iframe');
+    function fit(){
+      var scale = wrap.clientWidth / 1600;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(640 * scale) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+  </script>
+  <div class="page">
+  <div class="layout">
+  <main>
   <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Self-supervised</div>
   <p class="eyebrow">AI Field Map</p>
   <h1>Self-supervised</h1>
@@ -91,16 +119,28 @@
     
   </div>
 
-  <section>
+  <section id="sec-overview">
     <h2>개요</h2>
     <div class="content-box">
-      데이터 자체에서 유사-레이블(pretext task)을 생성해 사람의 레이블링 없이 표현을 학습하는 방식. 대조학습(SimCLR 등)과 마스킹 기반(BERT, MAE) 접근이 대표적이며, 대규모 사전학습의 핵심 동력이다.
+      <p>자기 지도 학습(Self-Supervised Learning, SSL)은 사람이 직접 붙인 레이블 없이, 데이터 자체가 가진 구조와 맥락에서 감독 신호를 스스로 만들어 유용한 표현을 학습하는 방법론이다. 먼저 입력 데이터에서 의사 레이블을 자동으로 생성하는 보조 과제(pretext task)를 풀게 하여 모델을 사전학습시키고, 그렇게 얻은 표현을 이후 단계에서 실제 지도 학습 과제에 활용한다. 그래서 SSL은 흔히 비지도 학습과 지도 학습의 중간 형태로 설명된다.</p>
+      <p>지도 학습은 품질 좋은 레이블을 대량으로 확보해야 하므로 비용과 시간이 크게 들고, 훈련된 범주 밖의 새로운 상황에는 잘 대응하지 못한다는 한계가 있다. 비지도 학습은 레이블이 필요 없지만 클러스터링이나 차원 축소처럼 명시적 과제 없이 데이터의 숨은 패턴을 찾는 데 그친다. 준지도 학습은 소량의 레이블 데이터와 대량의 무레이블 데이터를 함께 쓰고, 강화 학습은 보상 신호로 행동을 학습한다. SSL은 이들과 달리 레이블이 전혀 없는 데이터에서 스스로 과제를 만들어 학습 신호를 생성한다는 점에서 구별된다.</p>
+      <p>SSL이 중요한 이유는 사람과 동물이 세상을 배우는 방식에 가깝기 때문이다. 아이는 극소수의 예시만 보고도 새로운 대상을 일반화해서 알아보지만, 지도 학습 모델은 방대한 예시 없이는 낯선 상황에 잘 대응하지 못한다. 인간은 이전에 관찰을 통해 축적한 배경 지식, 즉 일종의 상식에 의존해 적은 감독만으로도 빠르게 학습하는데, SSL은 바로 이러한 배경 지식을 기계에 축적시키는 유력한 방법으로 여겨진다. 실제로 Word2Vec, BERT, RoBERTa 같은 자연어 처리 모델과 SwAV 기반의 SEER 같은 대규모 비전 모델이 이러한 사전학습으로 큰 성과를 냈다.</p>
+      <p>핵심 개념으로는 먼저 보조 과제(pretext task)가 있다. 이미지 회전 각도 맞히기, 가려진 영역 복원, 흑백 이미지 색칠, 다음 단어 예측처럼 정답을 데이터 자체에서 자동으로 만들어낼 수 있는 과제를 설계해, 모델이 다운스트림 과제에 쓸 만한 표현을 배우도록 유도한다. 대조 학습(contrastive learning)은 같은 원본에서 나온 양성 샘플끼리는 임베딩 공간에서 가깝게, 서로 다른 원본에서 나온 음성 샘플끼리는 멀게 배치하도록 학습시켜 의미 있는 표현을 얻는 방식이다. 오토인코딩은 입력을 압축했다가 복원하는 과정에서 데이터의 핵심 특징을 포착하게 만들고, 에너지 기반 모델(EBM)은 서로 호환되는 입력 쌍에는 낮은 에너지를, 그렇지 않은 쌍에는 높은 에너지를 부여하는 함수를 학습해 데이터 간 관계를 표현한다.</p>
+      <p>SSL은 레이블링 비용 없이 방대한 무레이블 데이터를 활용할 수 있어 확장성이 뛰어나고, 다양한 도메인에 두루 적용되는 범용성과 더 넓은 데이터 분포에서 학습해 과적합에 강한 일반화 능력이라는 이점을 지닌다. 다만 레이블이 없는 만큼 모델 예측의 정오를 외부에서 검증할 장치가 없어 지도 학습만큼 정확도를 보장하기 어렵고, 대조 학습처럼 매 반복마다 양성과 음성 샘플 쌍을 대량으로 처리해야 하는 방식은 계산 비용이 크다는 한계도 함께 지닌다.</p>
     </div>
   </section>
 
   
 
-  <section>
+  <section class="meta-block">
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">카테고리</span><span>AI 기초 / 핵심 개념</span></div>
+      <div class="meta-item"><span class="meta-label">태그</span><span><span class="tag-chip">#원본노드</span></span></div>
+      <div class="meta-item"><span class="meta-label">업데이트</span><span>2026-09-04</span></div>
+    </div>
+  </section>
+
+  <section id="sec-compass">
     <h2>Reading Compass — 관련 블럭</h2>
     <div class="compass">
       <div>
@@ -115,6 +155,17 @@
   </section>
 
   <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+  </main>
+  <aside class="toc">
+    <h3>On this page</h3>
+    <ul>
+      <li><a href="#sec-overview">개요</a></li>
+      <li><a href="#sec-compass">Reading Compass</a></li>
+    </ul>
+  </aside>
+  </div>
 </div>
+<script src="../../assets/nodes-index.js"></script>
+<script src="../../assets/site-chrome.js"></script>
 </body>
 </html>
