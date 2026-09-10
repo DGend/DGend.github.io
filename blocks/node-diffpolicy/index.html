@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffusion / Flow Policy — AI 테크트리</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
+    --card-bg:#ffffff; --accent:#2f6f5e; --accent-ink:#153c32; --accent-bg:#e4efe9;
+    --new-border:#b8873f; --new-bg:#f7ecd9; --new-ink:#6b4a17;
+    --shadow: 0 1px 2px rgba(31,36,32,0.06), 0 1px 1px rgba(31,36,32,0.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14181a; --ink:#e9ece9; --ink-soft:#9fa89f; --line:#3a413c; --line-soft:#2a302b;
+      --card-bg:#1c2224; --accent:#6fbf9f; --accent-ink:#dff3e9; --accent-bg:#22332c;
+      --new-border:#d1a35c; --new-bg:#332a18; --new-ink:#f0d6a4;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--ink); margin:0;
+    font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
+  }
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
+  .page{ max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  .breadcrumb{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft);
+    margin-bottom:18px;
+  }
+  .breadcrumb a{ color:var(--accent); text-decoration:none; }
+  .breadcrumb a:hover{ text-decoration:underline; }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+  }
+  h1{ font-size:clamp(24px,4vw,34px); font-weight:700; margin:0 0 6px; letter-spacing:-0.01em; }
+  .badges{ display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 28px; }
+  .badge{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft);
+    background:var(--card-bg); border:1px solid var(--line); border-radius:999px;
+    padding:4px 11px;
+  }
+  .badge.new{ border-color:var(--new-border); background:var(--new-bg); color:var(--new-ink); }
+  section{ margin:28px 0; }
+  h2{ font-size:14px; font-weight:600; color:var(--ink-soft); text-transform:uppercase;
+       letter-spacing:.06em; margin:0 0 12px; border-bottom:1px solid var(--line-soft); padding-bottom:8px; }
+  .content-box{
+    background:var(--card-bg); border:1px solid var(--line-soft); border-radius:10px;
+    padding:18px 20px; box-shadow:var(--shadow); color:var(--ink-soft); font-size:14px; line-height:1.7;
+  }
+  ul.papers{ list-style:none; margin:0; padding:0; }
+  ul.papers li{
+    background:var(--card-bg); border:1px solid var(--line-soft); border-radius:8px;
+    padding:10px 14px; margin-bottom:8px; font-size:13.5px; color:var(--ink);
+  }
+  .compass{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  @media (max-width:560px){ .compass{ grid-template-columns:1fr; } }
+  .compass h3{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:.06em; margin:0 0 10px;
+  }
+  .compass-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .compass-list a{
+    display:block; text-decoration:none; color:var(--ink);
+    background:var(--card-bg); border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; font-size:13.5px; transition:border-color .12s ease, transform .12s ease;
+  }
+  .compass-list a:hover{ border-color:var(--accent); transform:translateX(2px); }
+  .compass-empty{ color:var(--ink-soft); font-size:13px; font-style:italic; }
+  .home-link{
+    display:inline-flex; align-items:center; gap:6px; margin-top:36px;
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--accent);
+    text-decoration:none; border:1px solid var(--line); border-radius:8px; padding:8px 14px;
+    background:var(--card-bg);
+  }
+  .home-link:hover{ border-color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="breadcrumb"><a href="../../index.html">AI 테크트리</a> / Diffusion / Flow Policy</div>
+  <p class="eyebrow">Generative / Multi-Modal</p>
+  <h1>Diffusion / Flow Policy</h1>
+  <div class="badges">
+    
+    <span class="badge new mono">보강 노드 (2026)</span>
+    <span class="badge mono">Generative / Multi-Modal</span>
+  </div>
+
+  <section>
+    <h2>개요</h2>
+    <div class="content-box">
+      확산모델이나 플로우 매칭으로 로봇의 행동(액션 시퀀스) 분포 자체를 생성하는 정책 학습 방식. 멀티모달하고 복잡한 행동 분포를 표현하는 데 강점이 있다.
+    </div>
+  </section>
+
+  <section><h2>대표 논문 / 모델</h2><ul class="papers"><li>Chi et al., Diffusion Policy (2023)</li></ul></section>
+
+  <section>
+    <h2>Reading Compass — 관련 블럭</h2>
+    <div class="compass">
+      <div>
+        <h3>← 이 개념의 뿌리 (부모)</h3>
+        <ul class="compass-list"><li><a href="../node-vla/index.html">VLA (Vision- Language-Action)</a></li><li><a href="../node-17/index.html">Generative AI</a></li></ul>
+      </div>
+      <div>
+        <h3>→ 여기서 파생된 개념 (자식)</h3>
+        <ul class="compass-list"><li><a href="../node-27/index.html">AGI</a></li></ul>
+      </div>
+    </div>
+  </section>
+
+  <a class="home-link" href="../../index.html">&larr; 테크트리 전체로 돌아가기</a>
+</div>
+</body>
+</html>

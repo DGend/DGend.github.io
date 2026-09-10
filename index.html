@@ -1,0 +1,1392 @@
+<title>AI 테크트리</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f7f6f3;
+    --ink:#1f2420;
+    --ink-soft:#565f59;
+    --line:#c9c4ba;
+    --line-soft:#dedad2;
+    --node-bg:#ffffff;
+    --node-bg-dim:#efede8;
+    --accent:#2f6f5e;
+    --accent-ink:#153c32;
+    --accent-bg:#e4efe9;
+    --new-border:#b8873f;
+    --new-bg:#f7ecd9;
+    --new-ink:#6b4a17;
+    --shadow: 0 1px 2px rgba(31,36,32,0.06), 0 1px 1px rgba(31,36,32,0.04);
+    --dom-cv:#3b6fa0;
+    --dom-nlp:#a04f8f;
+    --dom-rl:#c17a2e;
+    --dom-gen:#7a5fc4;
+    --dom-robot:#4a9b6e;
+    --dom-safety:#c3453f;
+    --dom-ts:#1f8a7a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14181a;
+      --ink:#e9ece9;
+      --ink-soft:#9fa89f;
+      --line:#3a413c;
+      --line-soft:#2a302b;
+      --node-bg:#1c2224;
+      --node-bg-dim:#191e1f;
+      --accent:#6fbf9f;
+      --accent-ink:#dff3e9;
+      --accent-bg:#22332c;
+      --new-border:#d1a35c;
+      --new-bg:#332a18;
+      --new-ink:#f0d6a4;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4);
+      --dom-cv:#6ea3d6;
+      --dom-nlp:#d189c1;
+      --dom-rl:#e0a05c;
+      --dom-gen:#a993e0;
+      --dom-robot:#7ecba0;
+      --dom-safety:#e0827c;
+      --dom-ts:#4fc2ae;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14181a;
+    --ink:#e9ece9;
+    --ink-soft:#9fa89f;
+    --line:#3a413c;
+    --line-soft:#2a302b;
+    --node-bg:#1c2224;
+    --node-bg-dim:#191e1f;
+    --accent:#6fbf9f;
+    --accent-ink:#dff3e9;
+    --accent-bg:#22332c;
+    --new-border:#d1a35c;
+    --new-bg:#332a18;
+    --new-ink:#f0d6a4;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --dom-cv:#6ea3d6;
+    --dom-nlp:#d189c1;
+    --dom-rl:#e0a05c;
+    --dom-gen:#a993e0;
+    --dom-robot:#7ecba0;
+    --dom-safety:#e0827c;
+    --dom-ts:#4fc2ae;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans KR', 'Pretendard', -apple-system, sans-serif;
+  }
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
+
+  .page{
+    max-width:1440px;
+    margin:0 auto;
+    padding:40px 24px 80px;
+  }
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+    padding-bottom:20px;
+    margin-bottom:8px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 8px;
+  }
+  h1{
+    font-size:clamp(22px,3.4vw,32px);
+    font-weight:700;
+    margin:0;
+    text-wrap:balance;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-size:13.5px;
+    max-width:64ch;
+    line-height:1.6;
+    margin:10px 0 0;
+  }
+  .legend{
+    display:flex;
+    gap:18px;
+    font-size:12px;
+    color:var(--ink-soft);
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .legend-item{ display:flex; align-items:center; gap:7px; white-space:nowrap; }
+  .swatch{ width:12px; height:12px; border-radius:3px; border:1px solid var(--line); flex:none; }
+  .swatch.branch{ background:var(--node-bg); }
+  .swatch.path{ background:var(--accent-bg); border-color:var(--accent); }
+  .swatch.new{ background:var(--new-bg); border-color:var(--new-border); }
+  .reset-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    background:var(--node-bg);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:5px 10px;
+    cursor:pointer;
+    transition:border-color .12s ease, color .12s ease;
+  }
+  .reset-btn:hover{ border-color:var(--accent); color:var(--ink); }
+  .reset-btn:disabled{ opacity:.45; cursor:default; }
+  .reset-btn.active{ border-color:var(--accent); background:var(--accent-bg); color:var(--accent-ink); font-weight:600; }
+
+  /* ---- tree canvas ---- */
+  .tree-wrap{
+    margin-top:28px;
+    overflow-x:auto;
+    border:1px solid var(--line-soft);
+    border-radius:8px;
+    background:var(--node-bg-dim);
+  }
+  .tree{
+    position:relative;
+    width:1520px;
+    height:1830px;
+    margin:0 auto;
+  }
+  /* ---- year axis (left margin) ---- */
+  .year-axis{
+    position:absolute;
+    left:0; top:0;
+    width:112px; height:100%;
+    pointer-events:none;
+  }
+  .year-mark{
+    position:absolute;
+    left:14px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-soft);
+    opacity:.75;
+    white-space:nowrap;
+  }
+  .year-mark .tick{
+    width:14px; height:1px;
+    background:var(--line);
+    flex:none;
+  }
+  svg.connectors{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+  }
+  svg.connectors path{
+    fill:none;
+    stroke:var(--line);
+    stroke-width:1.4;
+    stroke-linecap:round;
+    transition:stroke .15s ease, stroke-width .15s ease, opacity .15s ease;
+  }
+  svg.connectors polygon{ fill:var(--line); transition:fill .15s ease; }
+  svg.connectors polygon.accent-arrow{ fill:var(--accent); }
+  svg.connectors path.on-path{ stroke:var(--accent); stroke-width:2.4; }
+
+  .tree.has-selection svg.connectors path:not(.on-path){ opacity:.35; }
+
+  .node{
+    position:absolute;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    width:132px;
+    height:56px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--node-bg);
+    color:var(--ink-soft);
+    font-size:13px;
+    font-weight:500;
+    line-height:1.3;
+    text-decoration:none;
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease, color .12s ease, background .12s ease, opacity .15s ease;
+  }
+  .node:hover{
+    transform:translateY(-2px);
+    border-color:var(--accent);
+    color:var(--ink);
+    box-shadow:0 4px 10px rgba(31,36,32,0.10);
+  }
+  .node:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+  .node .num{
+    position:absolute;
+    top:-9px; left:-9px;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:var(--node-bg);
+    border:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink-soft);
+    transition:background .12s ease, border-color .12s ease, color .12s ease;
+  }
+  .node .dom-dot{
+    position:absolute;
+    top:-5px; right:-5px;
+    width:10px; height:10px;
+    border-radius:50%;
+    border:2px solid var(--node-bg);
+    background:var(--dot-color, transparent);
+  }
+  .node[data-domain="cv"]     { --dot-color: var(--dom-cv); }
+  .node[data-domain="nlp"]    { --dot-color: var(--dom-nlp); }
+  .node[data-domain="rl"]     { --dot-color: var(--dom-rl); }
+  .node[data-domain="gen"]    { --dot-color: var(--dom-gen); }
+  .node[data-domain="robot"]  { --dot-color: var(--dom-robot); }
+  .node[data-domain="safety"] { --dot-color: var(--dom-safety); }
+  .node[data-domain="ts"]     { --dot-color: var(--dom-ts); }
+
+  /* small representative-model caption, floated just beneath a node —
+     purely informational, sits in the dead space above the next row and
+     is excluded from all edge-routing/collision geometry (which only
+     ever measures the .node box itself, never this element) */
+  .model-tag{
+    position:absolute;
+    width:132px;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9.5px;
+    line-height:1.35;
+    color:var(--ink-soft);
+    opacity:.68;
+    pointer-events:none;
+    white-space:normal;
+  }
+  .tree.has-selection .model-tag{ opacity:.28; }
+  .tree.has-domain-filter .model-tag{ opacity:.2; }
+
+  /* newly added nodes (2026 update) get a distinct dashed treatment
+     so the augmentation is legible against the original layout */
+  .node.new{
+    border-style:dashed;
+    border-color:var(--new-border);
+    background:var(--new-bg);
+    color:var(--new-ink);
+  }
+  .node.new .num{
+    border-color:var(--new-border);
+    background:var(--new-bg);
+    color:var(--new-ink);
+  }
+
+  /* selection states */
+  .tree.has-selection .node{ color:var(--ink-soft); }
+  .node.on-path{
+    background:var(--accent-bg);
+    border-color:var(--accent);
+    border-style:solid;
+    color:var(--accent-ink);
+    font-weight:600;
+  }
+  .node.on-path .num{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  .node.selected{
+    box-shadow:0 0 0 3px var(--accent-bg), 0 4px 10px rgba(31,36,32,0.14);
+  }
+  .tree.has-selection .node:not(.on-path){ opacity:.5; }
+
+  /* domain filter states */
+  .tree.has-domain-filter .node{ opacity:.25; }
+  .tree.has-domain-filter .node.dom-match{
+    opacity:1;
+    border-color:var(--dot-color, var(--line));
+    box-shadow:0 0 0 2px color-mix(in srgb, var(--dot-color, var(--line)) 35%, transparent), var(--shadow);
+  }
+  .tree.has-domain-filter svg.connectors path{ opacity:.15; }
+  .tree.has-domain-filter svg.connectors path.dom-edge{ opacity:1; stroke-width:2; }
+
+  .domain-bar{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-top:14px;
+  }
+  .domain-btn{
+    font-family:'IBM Plex Sans KR', sans-serif;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:var(--ink-soft);
+    background:var(--node-bg);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:5px 12px 5px 9px;
+    cursor:pointer;
+    transition:border-color .12s ease, color .12s ease, background .12s ease;
+  }
+  .domain-btn .dot{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--dot-color);
+    flex:none;
+  }
+  .domain-btn:hover{ color:var(--ink); border-color:var(--dot-color); }
+  .domain-btn.active{
+    color:var(--ink);
+    background:color-mix(in srgb, var(--dot-color) 16%, var(--node-bg));
+    border-color:var(--dot-color);
+    font-weight:600;
+  }
+  /* per-node placement (see inline style on each node — kept here only for reference) */
+
+  footer{
+    margin-top:18px;
+    display:flex;
+    justify-content:space-between;
+    color:var(--ink-soft);
+    font-size:11.5px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+</style>
+
+<div class="page">
+  <header>
+    <div>
+      <p class="eyebrow">AI Field Map — Tech Tree · 2026 Update</p>
+      <h1>인공지능 분야 테크트리</h1>
+      <p class="sub">인공지능의 대분류가 어떻게 파생되고 서로 연결되는지 흐름도로 정리했습니다. 세로축은 대략적인 등장 시기(위=과거, 아래=현재/미래)를 따르며, 왼쪽 연도 축은 각 구간이 대략 어느 시기인지를 나타냅니다. 점선 테두리는 원본에 없던 최신 개념을 보강한 노드이며, 우측 상단 점은 해당 노드가 속한 기술 범주를 나타냅니다. 일부 노드 아래의 작은 회색 글씨는 그 시기를 대표하는 실제 모델·논문명입니다. 블록을 클릭하면 해당 개념의 상세 페이지로 이동합니다. 우측 상단 "경로 탐색 모드"를 켜면 클릭 시 이동 대신 Artificial Intelligence부터 그 블록까지 이어지는 모든 상위 경로가 강조됩니다. 아래 범주 버튼으로는 같은 범주의 노드만 강조해서 볼 수 있습니다.</p>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="swatch branch"></span>원본 노드</div>
+      <div class="legend-item"><span class="swatch new"></span>보강된 노드</div>
+      <div class="legend-item"><span class="swatch path"></span>선택된 경로</div>
+      <button type="button" class="reset-btn" id="reset-btn" disabled>선택 해제</button>
+      <button type="button" class="reset-btn" id="mode-toggle">경로 탐색 모드: OFF</button>
+    </div>
+  </header>
+
+  <div class="domain-bar" id="domain-bar">
+    <button type="button" class="domain-btn" data-domain="cv"><span class="dot" style="--dot-color:var(--dom-cv)"></span>Computer Vision</button>
+    <button type="button" class="domain-btn" data-domain="nlp"><span class="dot" style="--dot-color:var(--dom-nlp)"></span>NLP / LLM</button>
+    <button type="button" class="domain-btn" data-domain="rl"><span class="dot" style="--dot-color:var(--dom-rl)"></span>Reinforcement Learning</button>
+    <button type="button" class="domain-btn" data-domain="gen"><span class="dot" style="--dot-color:var(--dom-gen)"></span>Generative / Multi-Modal</button>
+    <button type="button" class="domain-btn" data-domain="robot"><span class="dot" style="--dot-color:var(--dom-robot)"></span>Robotics / Embodied</button>
+    <button type="button" class="domain-btn" data-domain="safety"><span class="dot" style="--dot-color:var(--dom-safety)"></span>Alignment & Safety</button>
+    <button type="button" class="domain-btn" data-domain="ts"><span class="dot" style="--dot-color:var(--dom-ts)"></span>Time Series</button>
+  </div>
+
+  <div class="tree-wrap">
+    <div class="tree" id="tree">
+      <svg class="connectors" id="connectors" viewBox="0 0 1520 1830" preserveAspectRatio="none">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 6 3, 0 6"></polygon>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon class="accent-arrow" points="0 0, 6 3, 0 6"></polygon>
+          </marker>
+        </defs>
+      </svg>
+
+      <div class="year-axis" aria-hidden="true">
+        <div class="year-mark" style="top:110px;"><span class="tick"></span>1950s</div>
+        <div class="year-mark" style="top:210px;"><span class="tick"></span>1960s</div>
+        <div class="year-mark" style="top:310px;"><span class="tick"></span>1980s</div>
+        <div class="year-mark" style="top:410px;"><span class="tick"></span>1986</div>
+        <div class="year-mark" style="top:510px;"><span class="tick"></span>1990s</div>
+        <div class="year-mark" style="top:610px;"><span class="tick"></span>2000s</div>
+        <div class="year-mark" style="top:720px;"><span class="tick"></span>2012</div>
+        <div class="year-mark" style="top:820px;"><span class="tick"></span>2017</div>
+        <div class="year-mark" style="top:920px;"><span class="tick"></span>2020</div>
+        <div class="year-mark" style="top:1020px;"><span class="tick"></span>2022</div>
+        <div class="year-mark" style="top:1120px;"><span class="tick"></span>2023</div>
+        <div class="year-mark" style="top:1230px;"><span class="tick"></span>2024</div>
+        <div class="year-mark" style="top:1330px;"><span class="tick"></span>2025</div>
+        <div class="year-mark" style="top:1440px;"><span class="tick"></span>미래</div>
+        <div class="year-mark" style="top:1540px;"><span class="tick"></span>?</div>
+      </div>
+
+      <!-- Row A : ~1950s-60s — birth of AI as a field -->
+      <div tabindex="0" role="button" data-href="./blocks/node-1/index.html" class="node" id="node-1" data-num="1" style="left:850px;top:90px;">Artificial<br>Intelligence</div>
+      <div class="model-tag" style="left:850px;top:148px;">Turing, "Computing Machinery and Intelligence" (1950)</div>
+      <!-- Row B : ~1950s-60s — founding subfields -->
+      <div tabindex="0" role="button" data-href="./blocks/node-r1a/index.html" class="node" id="node-r1a" data-num="" style="left:250px;top:190px;width:150px;">Reasoning,<br>Prob. Solving</div>
+      <div class="model-tag" style="left:250px;top:248px;width:150px;">Newell & Simon, "Logic Theorist" (1956)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-perc/index.html" class="node" id="node-perc" data-domain="cv" data-num="" style="left:490px;top:190px;">Machine<br>Perception</div>
+      <div class="model-tag" style="left:490px;top:248px;">Rosenblatt, "The Perceptron" (1958)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-2/index.html" class="node" id="node-2" data-num="2" style="left:850px;top:190px;">Machine<br>Learning</div>
+      <div class="model-tag" style="left:850px;top:248px;">Samuel, "Machine Learning Using the Game of Checkers" (1959)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-kr/index.html" class="node" id="node-kr" data-num="" style="left:1250px;top:190px;width:160px;">Knowledge<br>Representation</div>
+      <!-- Row C : ~1960s-80s — classical paradigms & symbolic AI -->
+      <div tabindex="0" role="button" data-href="./blocks/node-4/index.html" class="node" id="node-4" data-num="4" style="left:130px;top:290px;width:150px;">Un-supervised<br>Learning</div>
+      <div class="model-tag" style="left:130px;top:348px;width:150px;">MacQueen, k-means (1967)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-emb/index.html" class="node new" id="node-emb" data-domain="robot" data-num="" style="left:350px;top:290px;width:150px;">Robotics /<br>Embodied AI</div>
+      <div class="model-tag" style="left:350px;top:348px;width:150px;">Shakey the Robot (SRI, 1966-72)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-3/index.html" class="node" id="node-3" data-num="3" style="left:850px;top:290px;">Supervised<br>Learning</div>
+      <div class="model-tag" style="left:850px;top:348px;">Widrow & Hoff, ADALINE (1960)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-7/index.html" class="node" id="node-7" data-domain="nlp" data-num="7" style="left:1080px;top:290px;">NLP Classics</div>
+      <div class="model-tag" style="left:1080px;top:348px;">ELIZA · n-gram</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-5/index.html" class="node" id="node-5" data-domain="rl" data-num="5" style="left:1290px;top:290px;width:160px;">RL</div>
+      <div class="model-tag" style="left:1290px;top:348px;width:160px;">Q-learning · TD-learning</div>
+      <!-- Row D : ~1980s — connectionism / Neural Network revival -->
+      <div tabindex="0" role="button" data-href="./blocks/node-6/index.html" class="node" id="node-6" data-num="6" style="left:850px;top:390px;">Neural<br>Network</div>
+      <div class="model-tag" style="left:850px;top:448px;">Backprop (1986)</div>
+      <!-- Row E : ~1980s-90s — early NN-era derivatives (LSTM 1997 shown here architecturally; its deep-learning-era relevance is really ~2014, see note below) -->
+      <div tabindex="0" role="button" data-href="./blocks/node-14/index.html" class="node" id="node-14" data-num="14" style="left:130px;top:490px;width:150px;">Representation<br>Learning</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-sensor/index.html" class="node new" id="node-sensor" data-domain="cv" data-num="" style="left:490px;top:490px;width:150px;">Sensor Modalities<br>(2D/3D/LiDAR/Radar)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-8/index.html" class="node" id="node-8" data-num="8" style="left:850px;top:490px;">from Scratch</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-ts/index.html" class="node new" id="node-ts" data-domain="ts" data-num="" style="left:1080px;top:490px;width:150px;">Time Series /<br>Sequential Data</div>
+      <div class="model-tag" style="left:1080px;top:548px;width:150px;">Box & Jenkins, ARIMA methodology (1970)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-tsrnn/index.html" class="node new" id="node-tsrnn" data-domain="ts" data-num="" style="left:1290px;top:490px;width:150px;">RNN / LSTM</div>
+      <div class="model-tag" style="left:1290px;top:548px;width:150px;">LSTM (1997)</div>
+      <!-- Row F : ~1990s-2000s — classical ML/robotics derivatives mature -->
+      <div tabindex="0" role="button" data-href="./blocks/node-15/index.html" class="node" id="node-15" data-num="15" style="left:130px;top:590px;width:150px;">Self-supervised</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-13/index.html" class="node" id="node-13" data-domain="cv" data-num="13" style="left:310px;top:590px;">Graph DL</div>
+      <div class="model-tag" style="left:310px;top:648px;">Scarselli et al., "The Graph Neural Network Model" (2009)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-manip/index.html" class="node new" id="node-manip" data-domain="robot" data-num="" style="left:490px;top:590px;width:120px;">Manipulation</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-nav/index.html" class="node new" id="node-nav" data-domain="robot" data-num="" style="left:630px;top:590px;width:120px;">Navigation</div>
+      <div class="model-tag" style="left:630px;top:648px;width:120px;">LaValle, RRT (1998)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-9/index.html" class="node" id="node-9" data-num="9" style="left:850px;top:590px;">Classification</div>
+      <div class="model-tag" style="left:850px;top:648px;">Cover & Hart, k-NN (1967)</div>
+      <!-- Row G : ~2012 — CNN/AlexNet-ImageNet breakthrough era -->
+      <div tabindex="0" role="button" data-href="./blocks/node-cnn/index.html" class="node new" id="node-cnn" data-num="" style="left:490px;top:700px;width:150px;">CNN<br>(Convolutional)</div>
+      <div class="model-tag" style="left:490px;top:758px;">AlexNet · VGGNet · ResNet</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-11/index.html" class="node" id="node-11" data-domain="cv" data-num="11" style="left:710px;top:700px;">Object<br>Detection</div>
+      <div class="model-tag" style="left:710px;top:758px;">R-CNN · YOLO · SSD</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-10/index.html" class="node" id="node-10" data-domain="nlp" data-num="10" style="left:850px;top:700px;">Deep NLP</div>
+      <div class="model-tag" style="left:850px;top:758px;">Collobert & Weston, Unified NLP Architecture (2008)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-12/index.html" class="node" id="node-12" data-domain="rl" data-num="12" style="left:1080px;top:700px;width:160px;">Deep RL</div>
+      <div class="model-tag" style="left:1080px;top:758px;width:160px;">DQN · AlphaGo</div>
+      <!-- Row H : ~2014-2017 — Transformer (2017) & deep RL algorithm families -->
+      <div tabindex="0" role="button" data-href="./blocks/node-transformer/index.html" class="node new" id="node-transformer" data-num="" style="left:490px;top:800px;width:150px;">Transformer</div>
+      <div class="model-tag" style="left:490px;top:858px;">"Attention Is All You Need" (2017)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-19/index.html" class="node" id="node-19" data-domain="cv" data-num="19" style="left:710px;top:800px;">X-Formers<br>at CV</div>
+      <div class="model-tag" style="left:710px;top:858px;">ViT · DETR</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-pgac/index.html" class="node new" id="node-pgac" data-domain="rl" data-num="" style="left:1080px;top:800px;width:150px;">Policy Gradient /<br>Actor-Critic</div>
+      <div class="model-tag" style="left:1080px;top:858px;width:150px;">TRPO (2015) · A3C (2016) · PPO (2017)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-tsforecast/index.html" class="node new" id="node-tsforecast" data-domain="ts" data-num="" style="left:1250px;top:800px;width:150px;">Modern<br>Forecasting</div>
+      <div class="model-tag" style="left:1250px;top:858px;width:150px;">Prophet (2017) · N-BEATS (2019)</div>
+      <!-- Row I : ~2018-2020 — LLM scaling & Vision Transformer (ViT, 2020) -->
+      <div tabindex="0" role="button" data-href="./blocks/node-16/index.html" class="node" id="node-16" data-num="16" style="left:130px;top:900px;">Semi-<br>supervised</div>
+      <div class="model-tag" style="left:130px;top:958px;">Lee, "Pseudo-Label" (2013)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-20/index.html" class="node" id="node-20" data-domain="cv" data-num="20" style="left:490px;top:900px;">X-Formers<br>at OD</div>
+      <div class="model-tag" style="left:490px;top:958px;">Carion et al., DETR (2020)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-18/index.html" class="node" id="node-18" data-domain="nlp" data-num="18" style="left:710px;top:900px;">LLMs</div>
+      <div class="model-tag" style="left:710px;top:958px;">BERT · GPT</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-marl/index.html" class="node new" id="node-marl" data-domain="rl" data-num="" style="left:1080px;top:900px;width:150px;">Multi-Agent RL</div>
+      <div class="model-tag" style="left:1080px;top:958px;width:150px;">QMIX (2018)</div>
+      <!-- Off-policy / max-entropy RL (SAC, ICML 2018) sits in the free gap
+           between LLMs and Multi-Agent RL, same Row I / ~2018-2020 era. -->
+      <div tabindex="0" role="button" data-href="./blocks/node-sac/index.html" class="node new" id="node-sac" data-domain="rl" data-num="" style="left:900px;top:900px;width:150px;">Off-Policy /<br>Max-Ent RL</div>
+      <div class="model-tag" style="left:900px;top:958px;width:150px;">SAC (2018)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-tstf/index.html" class="node new" id="node-tstf" data-domain="ts" data-num="" style="left:1290px;top:900px;width:150px;">Temporal<br>Transformers</div>
+      <!-- Model-based RL (MuZero, arXiv late-2019 / Nature 2020) sits in the
+           free space right of Meta Learning, same chronological era as
+           Multi-Agent RL and SAC one row up. -->
+      <div tabindex="0" role="button" data-href="./blocks/node-modelrl/index.html" class="node new" id="node-modelrl" data-domain="rl" data-num="" style="left:1260px;top:1000px;width:150px;">Model-Based RL</div>
+      <div class="model-tag" style="left:1260px;top:1058px;width:150px;">MuZero (2020)</div>
+      <div class="model-tag" style="left:1290px;top:958px;width:150px;">Informer · TFT</div>
+      <!-- Row J : ~2020-2022 — Generative AI / Multi-Modal / RLHF (InstructGPT, 2022) -->
+      <div tabindex="0" role="button" data-href="./blocks/node-17/index.html" class="node" id="node-17" data-domain="gen" data-num="17" style="left:130px;top:1000px;">Generative AI</div>
+      <div class="model-tag" style="left:130px;top:1058px;">GAN · VAE · Diffusion</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-22/index.html" class="node" id="node-22" data-domain="gen" data-num="22" style="left:490px;top:1000px;">Multi-Modal<br>Learning</div>
+      <div class="model-tag" style="left:490px;top:1058px;">CLIP · BLIP</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-rlhf/index.html" class="node new" id="node-rlhf" data-domain="nlp" data-num="" style="left:710px;top:1000px;width:160px;">RLHF / RLAIF</div>
+      <div class="model-tag" style="left:710px;top:1058px;width:160px;">InstructGPT (2022)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-21/index.html" class="node" id="node-21" data-num="21" style="left:1080px;top:1000px;width:160px;">Meta Learning</div>
+      <div class="model-tag" style="left:1080px;top:1058px;width:160px;">MAML (2017)</div>
+      <!-- Row K : ~2022-2024 — Alignment & Safety era -->
+      <div tabindex="0" role="button" data-href="./blocks/node-23/index.html" class="node" id="node-23" data-num="23" style="left:130px;top:1100px;width:150px;">End-to-End<br>Pipelines</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-24/index.html" class="node" id="node-24" data-num="24" style="left:490px;top:1100px;width:160px;">Human-in<br>-the-Loop</div>
+      <div class="model-tag" style="left:490px;top:1158px;width:160px;">Christiano et al., RL from Human Preferences (2017)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-align/index.html" class="node new" id="node-align" data-domain="safety" data-num="" style="left:710px;top:1100px;width:150px;">Alignment &<br>Safety</div>
+      <div class="model-tag" style="left:710px;top:1158px;width:150px;">Constitutional AI</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-interp/index.html" class="node new" id="node-interp" data-domain="safety" data-num="" style="left:880px;top:1100px;width:150px;">Interpretability</div>
+      <div class="model-tag" style="left:880px;top:1158px;width:150px;">Anthropic, "Toy Models of Superposition" (2022)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-redteam/index.html" class="node new" id="node-redteam" data-domain="safety" data-num="" style="left:1050px;top:1100px;width:150px;">Red Teaming<br>& Eval</div>
+      <div class="model-tag" style="left:1050px;top:1158px;width:150px;">Perez et al., "Red Teaming LMs with LMs" (2022)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-tsanomaly/index.html" class="node new" id="node-tsanomaly" data-domain="ts" data-num="" style="left:1290px;top:1100px;width:150px;">Deep Anomaly<br>Detection</div>
+      <div class="model-tag" style="left:1290px;top:1158px;width:150px;">Anomaly Transformer (2022)</div>
+      <!-- Row L : ~2023-2025 — World Models / VLA (embodied foundation models) -->
+      <div tabindex="0" role="button" data-href="./blocks/node-world/index.html" class="node new" id="node-world" data-num="" style="left:130px;top:1210px;width:150px;">World Models</div>
+      <div class="model-tag" style="left:130px;top:1268px;width:150px;">Sora · DreamerV3</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-vla/index.html" class="node new" id="node-vla" data-domain="robot" data-num="" style="left:490px;top:1210px;width:150px;">VLA (Vision-<br>Language-Action)</div>
+      <div class="model-tag" style="left:490px;top:1268px;width:150px;">RT-2 · π0 (pi-zero)</div>
+      <!-- Preference Optimization (DPO, arXiv May 2023 / NeurIPS 2023): a
+           non-RL contrastive-loss child of RLHF/RLAIF that largely
+           superseded PPO-based RLHF for LLM alignment fine-tuning. -->
+      <div tabindex="0" role="button" data-href="./blocks/node-dpo/index.html" class="node new" id="node-dpo" data-domain="rl" data-num="" style="left:900px;top:1210px;width:150px;">Preference<br>Optimization</div>
+      <div class="model-tag" style="left:900px;top:1268px;width:150px;">DPO (2023)</div>
+      <!-- Group-Relative / Verifiable-Reward RL (GRPO, DeepSeekMath, arXiv
+           Feb 2024): unlike DPO this IS a policy-gradient RL method (a
+           PPO-family successor, dropping the critic and using group-relative
+           advantage estimation), applied to LLM reasoning training with
+           verifiable/rule-based rewards (RLVR). Conceptually it is a
+           sibling/successor of PPO-based RLHF, not of DPO's contrastive-loss
+           approach — so it is placed as a second direct child of RLHF/RLAIF,
+           alongside DPO rather than beneath it. -->
+      <div tabindex="0" role="button" data-href="./blocks/node-grpo/index.html" class="node new" id="node-grpo" data-domain="rl" data-num="" style="left:1070px;top:1210px;width:150px;">Group-Relative RL<br>(RLVR)</div>
+      <div class="model-tag" style="left:1070px;top:1268px;width:150px;">GRPO (2024)</div>
+      <!-- Row L2 : ~2023-2025 — concrete World-Model/VLA derivatives -->
+      <div tabindex="0" role="button" data-href="./blocks/node-videopred/index.html" class="node new" id="node-videopred" data-domain="gen" data-num="" style="left:130px;top:1310px;width:130px;">Video / Pixel<br>Prediction</div>
+      <div class="model-tag" style="left:130px;top:1368px;width:130px;">OpenAI, "Video Generation Models as World Simulators" (2024)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-jepa/index.html" class="node new" id="node-jepa" data-domain="gen" data-num="" style="left:280px;top:1310px;width:110px;">JEPA</div>
+      <div class="model-tag" style="left:280px;top:1368px;width:110px;">I-JEPA · V-JEPA</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-diffpolicy/index.html" class="node new" id="node-diffpolicy" data-domain="gen" data-num="" style="left:450px;top:1310px;width:150px;">Diffusion / Flow<br>Policy</div>
+      <div class="model-tag" style="left:450px;top:1368px;width:150px;">Chi et al., Diffusion Policy (2023)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-hvla/index.html" class="node new" id="node-hvla" data-domain="robot" data-num="" style="left:620px;top:1310px;width:150px;">Hierarchical<br>VLA</div>
+      <div class="model-tag" style="left:620px;top:1368px;width:150px;">RT-H, Action Hierarchies (2024)</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-25/index.html" class="node" id="node-25" data-num="25" style="left:990px;top:1310px;">Cognitive<br>Science</div>
+      <div tabindex="0" role="button" data-href="./blocks/node-26/index.html" class="node" id="node-26" data-num="26" style="left:1170px;top:1310px;">Neuroscience</div>
+      <!-- Row M : future-facing -->
+      <div tabindex="0" role="button" data-href="./blocks/node-27/index.html" class="node" id="node-27" data-num="27" style="left:1080px;top:1420px;">AGI</div>
+      <!-- Row N : aspirational endpoint -->
+      <div tabindex="0" role="button" data-href="./blocks/node-28/index.html" class="node" id="node-28" data-num="28" style="left:1080px;top:1520px;">ASI</div>
+    </div>
+  </div>
+
+  <footer>
+    <span>© Deep Learning Bible — reference layout, 2026 augmented</span>
+    <span>블록 클릭 = 상세 페이지 이동 (경로 탐색 모드 ON 시 = 경로 강조)</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  // add number badges from data-num
+  document.querySelectorAll('.node').forEach(function(n){
+    var num = n.getAttribute('data-num');
+    if(num){
+      var b = document.createElement('span');
+      b.className = 'num mono';
+      b.textContent = num;
+      n.appendChild(b);
+    }
+    if(n.dataset.domain){
+      var dot = document.createElement('span');
+      dot.className = 'dom-dot';
+      n.appendChild(dot);
+    }
+  });
+
+  var svg = document.getElementById('connectors');
+
+  function rect(id){
+    var el = document.getElementById(id);
+    var l = parseFloat(el.style.left), t = parseFloat(el.style.top);
+    var w = el.style.width ? parseFloat(el.style.width) : 132;
+    var h = 56;
+    return { l:l, t:t, w:w, h:h, cx:l+w/2, cy:t+h/2, r:l+w, b:t+h };
+  }
+
+  var edgeEls = [];
+  var adjacency = {}; // childId -> [parentId, ...]
+
+  function draw(d, from, to){
+    var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.setAttribute('marker-end', 'url(#arrow)');
+    path.dataset.from = from;
+    path.dataset.to = to;
+    svg.appendChild(path);
+    edgeEls.push(path);
+    adjacency[to] = adjacency[to] || [];
+    adjacency[to].push(from);
+  }
+
+  // Vertical edge: exits bottom-center of a, enters top-center of b.
+  // bend (0-1) controls where the horizontal jog happens between the rows.
+  function vedge(fromId, toId, bend){
+    var a = rect(fromId), b = rect(toId);
+    bend = bend===undefined ? 0.5 : bend;
+    var sx = a.cx, sy = a.b;
+    var ex = b.cx, ey = b.t;
+    var d;
+    if(Math.abs(sx-ex) < 1){
+      d = 'M '+sx+' '+sy+' L '+ex+' '+ey;
+    } else {
+      var midY = sy + (ey-sy)*bend;
+      d = 'M '+sx+' '+sy+' L '+sx+' '+midY+' L '+ex+' '+midY+' L '+ex+' '+ey;
+    }
+    draw(d, fromId, toId);
+  }
+
+  // Straight vertical edge for stacked nodes sharing the same center x.
+  function sedge(fromId, toId){
+    var a = rect(fromId), b = rect(toId);
+    var d = 'M '+a.cx+' '+a.b+' L '+b.cx+' '+b.t;
+    draw(d, fromId, toId);
+  }
+
+  // Bypass edge: routes out the given side of "from", past an obstacle
+  // column, and back into the same side of "to" — used when a straight
+  // drop between two nodes would cross a third node sitting between them.
+  function bedge(fromId, toId, side, clearX){
+    var a = rect(fromId), b = rect(toId);
+    var sx = side==='right' ? a.r : a.l;
+    var sy = a.cy;
+    var ex = side==='right' ? b.r : b.l;
+    var ey = b.cy;
+    var d = 'M '+sx+' '+sy+' L '+clearX+' '+sy+' L '+clearX+' '+ey+' L '+ex+' '+ey;
+    draw(d, fromId, toId);
+  }
+
+  // Horizontal edge between two nodes at (roughly) the same row —
+  // exits the given side of "from", enters the opposite side of "to".
+  function hedge(fromId, toId, fromSide){
+    var a = rect(fromId), b = rect(toId);
+    var sx = fromSide==='right' ? a.r : a.l;
+    var sy = a.cy;
+    var ex = fromSide==='right' ? b.l : b.r;
+    var ey = b.cy;
+    var d = 'M '+sx+' '+sy+' L '+ex+' '+ey;
+    draw(d, fromId, toId);
+  }
+
+  // Long-haul edge for two nodes far apart with several columns of other
+  // nodes between them: exits the given side of "from", drops/rises to a
+  // clear horizontal band (clearY) with no node in it across the whole
+  // canvas, travels that band to line up with "to", then enters its top.
+  function longEdge(fromId, toId, side, clearY){
+    var a = rect(fromId), b = rect(toId);
+    var sx = side==='right' ? a.r : a.l;
+    var sy = a.cy;
+    var ex = b.cx;
+    var ey = b.t;
+    var d = 'M '+sx+' '+sy+' L '+sx+' '+clearY+' L '+ex+' '+clearY+' L '+ex+' '+ey;
+    draw(d, fromId, toId);
+  }
+
+
+  // ================= Row A -> Row B (1950s-60s founding subfields) =================
+  vedge('node-1','node-r1a', 0.35);
+  vedge('node-1','node-perc', 0.5);
+  sedge('node-1','node-2');
+  vedge('node-1','node-kr', 0.5);
+
+  // NLP Classics (symbolic-AI era) skips Row B for horizontal room — jog
+  // happens right after leaving node-1 (y=166, above Row B's top at 190) so
+  // it never crosses node-2's box in Row B.
+  (function(){
+    var a = rect('node-1'), b = rect('node-7');
+    var dropY = 166;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+dropY+' L '+b.cx+' '+dropY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-1', 'node-7');
+  })();
+
+  // Robotics/Embodied AI likewise skips Row B, riding the clear gap
+  // (x=420-490) between Reasoning/Prob.Solving and Machine Perception.
+  (function(){
+    var a = rect('node-1'), b = rect('node-emb');
+    var dropY = 166, laneX = 425;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+b.t;
+    draw(d, 'node-1', 'node-emb');
+  })();
+
+  // ================= Row B -> Row C (1960s-80s classical paradigms) =================
+  vedge('node-perc','node-4', 0.5);
+  vedge('node-2','node-4', 0.3);
+  sedge('node-2','node-3');
+  hedge('node-7','node-5', 'right');
+  vedge('node-kr','node-5', 0.55);
+
+  // Manipulation/Navigation are Robotics/Embodied AI's concrete
+  // competencies, but as distinct subfields they only matured in the
+  // 1990s-2000s (Row F) — a DELIBERATE multi-row gap versus the founding
+  // concept (Row C). Both ride Embodied AI's own clear vertical lane
+  // (x≈425, clear all the way down to Row F) then fan out just above it.
+  (function(){
+    var a = rect('node-emb'), b = rect('node-manip');
+    var laneX = a.cx, bandY = 566;
+    var d = 'M '+laneX+' '+a.b+' L '+laneX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-emb', 'node-manip');
+  })();
+  (function(){
+    var a = rect('node-emb'), b = rect('node-nav');
+    var laneX = a.cx, bandY = 572;
+    var d = 'M '+laneX+' '+a.b+' L '+laneX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-emb', 'node-nav');
+  })();
+
+  // ================= Row C -> Row D (1980s connectionism revival) =================
+  sedge('node-3','node-6');
+
+  // Time Series / Sequential Data derives from Neural Network itself.
+  (function(){
+    var a = rect('node-6'), b = rect('node-ts');
+    var laneX = 1155, dropY = 418;
+    var d = 'M '+a.r+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+b.t;
+    draw(d, 'node-6', 'node-ts');
+  })();
+
+  // ================= Row D -> Row E =================
+  sedge('node-6','node-8');
+  hedge('node-ts','node-tsrnn', 'right');
+
+  // CNN (breakthrough ~2012, Row G — AlexNet/ImageNet, though convolutional
+  // nets themselves date to LeNet 1989) and Transformer (breakthrough 2017
+  // — "Attention Is All You Need", Row H) both derive from Neural Network
+  // itself — DELIBERATE multi-row gap reflecting the real historical
+  // distance between connectionism's 1980s revival and each landmark
+  // architecture. Both ride the clear far-right lane (x=1460) then jog
+  // left along a clear horizontal band just above their target row.
+  (function(){
+    var a = rect('node-6'), b = rect('node-cnn');
+    var laneX = 1460, dropY = 418, bandY = 684;
+    var d = 'M '+a.r+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-6', 'node-cnn');
+  })();
+  (function(){
+    var a = rect('node-6'), b = rect('node-transformer');
+    var laneX = 1460, dropY = 424, bandY = 784;
+    var d = 'M '+a.r+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-6', 'node-transformer');
+  })();
+
+  // ================= Row E -> Row F/G =================
+  // "from Scratch" -> Representation Learning: dodges below Sensor
+  // Modalities, which now sits directly between them at this row.
+  (function(){
+    var a = rect('node-8'), b = rect('node-14');
+    var bandY = 574;
+    var d = 'M '+a.l+' '+a.cy+' L '+a.l+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.b;
+    draw(d, 'node-8', 'node-14');
+  })();
+  sedge('node-8','node-9');
+
+  // Deep NLP / Deep RL are both practical breakthroughs of the CNN-adjacent
+  // deep-learning-compute era (~2012), 2 rows below "from Scratch". Routed
+  // around node-9, which sits directly beneath node-8.
+  (function(){
+    var a = rect('node-8'), b = rect('node-10');
+    var laneX = 770, dropY = 518, bandY = 686;
+    var d = 'M '+a.l+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-8', 'node-10');
+  })();
+  (function(){
+    var a = rect('node-8'), b = rect('node-12');
+    var laneX = 1020, dropY = 524, bandY = 686;
+    var d = 'M '+a.r+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-8', 'node-12');
+  })();
+
+  // RNN/LSTM (LSTM invented 1997, but shown here in its NN-architecture
+  // generation) -> Temporal Transformers (Informer 2020/AAAI'21, TFT 2019):
+  // rides the clear far-right lane, skipping several rows of unrelated
+  // columns.
+  (function(){
+    var a = rect('node-tsrnn'), b = rect('node-tstf');
+    var laneX = 1460, dropY = 518;
+    var d = 'M '+a.r+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+b.t;
+    draw(d, 'node-tsrnn', 'node-tstf');
+  })();
+
+  // RNN/LSTM -> Forecasting (Prophet 2017 / N-BEATS 2019): a separate,
+  // earlier deep/statistical-forecasting lineage from the same sequential-
+  // modeling root, landing one row above Temporal Transformers per its
+  // real landmark-paper dates.
+  (function(){
+    var a = rect('node-tsrnn'), b = rect('node-tsforecast');
+    var laneX = 1500, dropY = 524;
+    var d = 'M '+a.r+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+b.cy+' L '+b.r+' '+b.cy;
+    draw(d, 'node-tsrnn', 'node-tsforecast');
+  })();
+
+  // ================= Row F -> Row G =================
+  sedge('node-14','node-15');
+  vedge('node-14','node-13', 0.4);
+  vedge('node-9','node-11', 0.5);
+  vedge('node-10','node-19', 0.4);
+
+  // LLMs (GPT-era scaling, Row I) is 2 rows below Deep NLP — its
+  // breakthrough came several years after the deep-NLP shift itself.
+  (function(){
+    var a = rect('node-10'), b = rect('node-18');
+    // laneX moved to 860 (between LLMs and the new Off-Policy/Max-Ent RL
+    // node at x=900-1050) and now enters node-18 from the top rather than
+    // the side, since any right-side entry would have to cross that node.
+    var laneX = 860, dropY = 724;
+    var d = 'M '+a.r+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+b.t+' L '+b.cx+' '+b.t;
+    draw(d, 'node-10', 'node-18');
+  })();
+
+  // Deep RL -> RLHF/RLAIF (InstructGPT/ChatGPT era, ~2022, Row J): the
+  // RL-lineage reward-modeling technique matured long after Deep RL itself
+  // — a 3-row DELIBERATE gap, riding the clear far-right lane down and back
+  // in through a clear band above Row J.
+  (function(){
+    var a = rect('node-12'), b = rect('node-rlhf');
+    var bandY = 784, laneX = 1460, topBandY = 990;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+laneX+' '+bandY+' L '+laneX+' '+topBandY+' L '+b.cx+' '+topBandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-12', 'node-rlhf');
+  })();
+
+  // LLMs -> RLHF/RLAIF: RLHF/RLAIF is a post-hoc fine-tuning technique
+  // APPLIED TO pretrained LLMs (InstructGPT/ChatGPT, ~2022) — LLMs (Row I)
+  // must be the parent here, not the child; corrected from an earlier,
+  // backwards RLHF->LLMs edge.
+  (function(){
+    var a = rect('node-18'), b = rect('node-rlhf');
+    var dodgeX = 660, bandY = 968;
+    var d = 'M '+a.r+' '+a.cy+' L '+dodgeX+' '+a.cy+' L '+dodgeX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-18', 'node-rlhf');
+  })();
+
+  // ================= Row G same-row =================
+  hedge('node-cnn','node-11', 'right');   // CNN feeds the CNN-era CV pipeline (Object Detection)
+
+  // ================= Row H same-row + cross-row =================
+  hedge('node-transformer','node-19', 'right');  // Transformer feeds ViT-era X-Formers at CV
+
+  // Transformer -> Temporal Transformers: 1 row down but far right (many
+  // columns between) — drops below Row H first, rides the far-right lane.
+  (function(){
+    var a = rect('node-transformer'), b = rect('node-tstf');
+    var laneX = 1460, bandY = 878;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+laneX+' '+bandY+' L '+laneX+' '+b.t+' L '+b.cx+' '+b.t;
+    draw(d, 'node-transformer', 'node-tstf');
+  })();
+
+  // Deep RL -> Alignment & Safety (reward modeling / RLHF lineage), 3 rows
+  // down — same far-right-lane strategy as the RLHF edge above.
+  (function(){
+    var a = rect('node-12'), b = rect('node-align');
+    var bandY = 776, laneX = 1460, riseY = 1078;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+laneX+' '+bandY+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-12', 'node-align');
+  })();
+  // RLHF/RLAIF -> Alignment & Safety: adjacent rows, roughly aligned columns.
+  vedge('node-rlhf','node-align', 0.5);
+
+  // RLHF/RLAIF's two 2023-2024 successors: Preference Optimization (DPO)
+  // and Group-Relative RL (GRPO/RLVR). Both ride a shared clear lane
+  // (x=1245, the gap between Red Teaming/Eval and Anomaly Detection in
+  // Row K) down past Row K to just above Row L, then peel off left into
+  // each target's top edge.
+  (function(){
+    var a = rect('node-rlhf'), b = rect('node-dpo');
+    var dropY = 1080, laneX = 1245, riseY = 1200;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-rlhf', 'node-dpo');
+  })();
+  (function(){
+    var a = rect('node-rlhf'), b = rect('node-grpo');
+    var dropY = 1086, laneX = 1245, riseY = 1200;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-rlhf', 'node-grpo');
+  })();
+
+  // GRPO is also, algorithmically, a direct descendant of the PPO-family
+  // policy-gradient methods (it drops the critic and swaps in
+  // group-relative advantage estimation) — a second, algorithmic-lineage
+  // parent alongside its RLHF-application parent above. Rides the same
+  // far-right lane as Deep RL's other long-range edges.
+  (function(){
+    var a = rect('node-pgac'), b = rect('node-grpo');
+    // drop below Row H first (clear of the Modern Forecasting node at
+    // x=1250-1400) before jogging out to the far-right lane.
+    var dropY = 878, laneX = 1460, riseY = 1200;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-pgac', 'node-grpo');
+  })();
+
+  // Temporal Transformers -> Anomaly Detection (Anomaly Transformer,
+  // ICLR 2022): the transformer-based sequence architecture is applied to
+  // the anomaly-detection task shortly after, one row down, same column.
+  // No longer a straight vedge — the new Model-Based RL node (MuZero, 2020)
+  // now sits in this column's Row J slot, so this jogs right around it via
+  // the far-right lane before dropping back into Anomaly Detection.
+  (function(){
+    var a = rect('node-tstf'), b = rect('node-tsanomaly');
+    var laneX = 1460;
+    var d = 'M '+a.cx+' '+a.b+' L '+laneX+' '+a.b+' L '+laneX+' '+b.t+' L '+b.cx+' '+b.t;
+    draw(d, 'node-tstf', 'node-tsanomaly');
+  })();
+
+  // ================= Row F/G/H -> Row I (2018-2020 LLM/ViT era) =================
+  (function(){
+    var a = rect('node-15'), b = rect('node-16');
+    var midY = a.b + (b.t - a.b) * 0.5;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+midY+' L '+b.cx+' '+midY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-15', 'node-16');
+  })();
+  (function(){
+    var a = rect('node-13'), b = rect('node-16');
+    var bandY = 878;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-13', 'node-16');
+  })();
+
+  // Object Detection -> X-Formers at OD: 2 rows down (transformer-based OD
+  // came a few years after the CNN-era detector). Dodges around node-19
+  // which sits directly beneath Object Detection.
+  (function(){
+    var a = rect('node-11'), b = rect('node-20');
+    var dodgeX = 660, bandY = 878;
+    var d = 'M '+a.l+' '+a.cy+' L '+dodgeX+' '+a.cy+' L '+dodgeX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-11', 'node-20');
+  })();
+  vedge('node-19','node-20', 0.5);
+  sedge('node-19','node-18');
+
+  hedge('node-align','node-interp', 'right');
+
+  // Forecasting -> End-to-End Pipelines: deployed forecasting models feed
+  // real production ML pipelines, same as several other applied-technique
+  // nodes converging there.
+  (function(){
+    var a = rect('node-tsforecast'), b = rect('node-23');
+    var laneX = 1500, dropY = 848, riseY = 1080;
+    var d = 'M '+a.r+' '+a.cy+' L '+laneX+' '+a.cy+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-tsforecast', 'node-23');
+  })();
+
+  // Transformer also feeds X-Formers at OD and LLMs directly (both 1 row
+  // below, roughly aligned columns), dodging around Object Detection/
+  // X-Formers at CV which sit between.
+  vedge('node-transformer','node-20', 0.5);
+  (function(){
+    var a = rect('node-transformer'), b = rect('node-18');
+    var dodgeX = 660, bandY = 878;
+    var d = 'M '+a.r+' '+a.cy+' L '+dodgeX+' '+a.cy+' L '+dodgeX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-transformer', 'node-18');
+  })();
+
+  // ================= Row I -> Row J (2020-2022 Generative/MultiModal/RLHF) =================
+  vedge('node-16','node-17');
+  vedge('node-20','node-17', 0.4);
+  vedge('node-20','node-22');
+  vedge('node-18','node-22', 0.4);
+
+  // LLMs -> Meta Learning: now correctly forward-in-time. Meta Learning is
+  // placed at its LLM-era resurgence (in-context/few-shot learning, Row J)
+  // rather than its classical-ML origin, since that is the sense in which
+  // it derives from LLMs here.
+  (function(){
+    var a = rect('node-18'), b = rect('node-21');
+    var bandY = 968;
+    // drop straight down at a.r (842, clear of the new Off-Policy/Max-Ent
+    // RL node at x=900-1050) before jogging right into node-21's top.
+    var d = 'M '+a.r+' '+a.cy+' L '+a.r+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-18', 'node-21');
+  })();
+
+  hedge('node-interp','node-redteam', 'right');
+
+  // ================= Row J -> Row K/L =================
+  vedge('node-17','node-23', 0.5);
+  vedge('node-22','node-23', 0.4);
+
+  // Multi-Modal Learning -> World Models: dodges around End-to-End
+  // Pipelines/Human-in-the-Loop (Row K) which sit directly below in the
+  // same column, entering World Models from underneath.
+  (function(){
+    var a = rect('node-22'), b = rect('node-world');
+    var bandY = 1080, dodgeX = 300;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+dodgeX+' '+bandY+' L '+dodgeX+' '+b.b+' L '+b.cx+' '+b.b;
+    draw(d, 'node-22', 'node-world');
+  })();
+
+  // Deep RL -> World Models: many rows down, far-right lane, entering from
+  // below (World Models' own row is otherwise reached from the top by its
+  // other parent, Multi-Modal Learning).
+  (function(){
+    var a = rect('node-12'), b = rect('node-world');
+    var bandY = 776, laneX = 1460, riseY = 1290;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+laneX+' '+bandY+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.b;
+    draw(d, 'node-12', 'node-world');
+  })();
+
+  vedge('node-22','node-24', 0.5);
+
+  // Meta Learning -> Human-in-the-Loop: now correctly forward-in-time
+  // (Meta Learning Row J -> Human-in-the-Loop Row K, one row down).
+  (function(){
+    var a = rect('node-21'), b = rect('node-24');
+    var dodgeX = 950, bandY = 1068;
+    var d = 'M '+a.l+' '+a.cy+' L '+dodgeX+' '+a.cy+' L '+dodgeX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-21', 'node-24');
+  })();
+
+  // Deep RL's own two concrete algorithm families sit in Row H, one row
+  // below — kept close to Deep RL despite the chronological reflow since
+  // policy-gradient/actor-critic and multi-agent RL methods matured
+  // alongside deep RL itself through the mid-2010s.
+  longEdge('node-12','node-pgac', 'right', 776);
+  (function(){
+    var a = rect('node-12'), b = rect('node-marl');
+    var dodgeX = 1460, dropY = 776, bandY = 878;
+    var d = 'M '+a.r+' '+a.cy+' L '+dodgeX+' '+a.cy+' L '+dodgeX+' '+bandY+' L '+b.r+' '+bandY+' L '+b.r+' '+b.t;
+    draw(d, 'node-12', 'node-marl');
+  })();
+
+  // ================= RL branch expansion (TRPO/A3C/PPO already folded into
+  // the node-pgac model-tag above; the remaining landmark RL techniques get
+  // their own nodes here) =================
+
+  // Policy Gradient/Actor-Critic (PPO family, Row H) -> Off-Policy /
+  // Max-Ent RL (SAC, ICML 2018, Row I): SAC is the off-policy,
+  // maximum-entropy counterpart to the on-policy PG/AC methods above it.
+  // Short jog left+down through the narrow band between the two rows.
+  (function(){
+    var a = rect('node-pgac'), b = rect('node-sac');
+    var bandY = 878;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-pgac', 'node-sac');
+  })();
+
+  // Deep RL (Row G) -> Model-Based RL (MuZero, 2020, Row J): a 2-row
+  // chronological gap, riding the same clear far-right lane used by the
+  // Deep RL -> Alignment & Safety edge below.
+  (function(){
+    var a = rect('node-12'), b = rect('node-modelrl');
+    var laneX = 1460;
+    var d = 'M '+a.r+' '+a.cy+' L '+laneX+' '+a.cy+' L '+laneX+' '+b.t+' L '+b.cx+' '+b.t;
+    draw(d, 'node-12', 'node-modelrl');
+  })();
+
+  // Machine Perception (Row B, ~1950s-60s founding question) -> Sensor
+  // Modalities (Row E, ~1980s-90s: which physical sensors CV operates on) —
+  // both x=490, straight vertical drop, correctly forward-in-time.
+  vedge('node-perc','node-sensor', 0.5);
+
+  // Sensor Modalities (Row E) feeds the two CV transformer nodes (Row H/I) —
+  // correctly forward-in-time now that Sensor Modalities sits earlier than
+  // both children.
+  (function(){
+    var a = rect('node-sensor'), b = rect('node-19');
+    var laneX = 1460, dropY = 576, bandY = 776;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-sensor', 'node-19');
+  })();
+  (function(){
+    var a = rect('node-sensor'), b = rect('node-20');
+    var laneX = 1500, dropY = 582, bandY = 878;
+    var d = 'M '+a.r+' '+a.cy+' L '+a.r+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-sensor', 'node-20');
+  })();
+
+  // ================= VLA (Vision-Language-Action) convergence, Row L =================
+  // VLA fuses Multi-Modal Learning (vision-language alignment), LLMs
+  // (language), and Robotics/Embodied AI (physical action).
+  (function(){
+    var a = rect('node-22'), b = rect('node-vla');
+    var bandY = 1080, dodgeX = 420;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+dodgeX+' '+bandY+' L '+dodgeX+' '+b.t+' L '+b.cx+' '+b.t;
+    draw(d, 'node-22', 'node-vla');
+  })();
+  (function(){
+    var a = rect('node-18'), b = rect('node-vla');
+    var dodgeX = 670, bandY = 1180;
+    var d = 'M '+a.l+' '+a.cy+' L '+dodgeX+' '+a.cy+' L '+dodgeX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-18', 'node-vla');
+  })();
+
+  // Embodied AI (Row C) also feeds VLA and World Models directly —
+  // DELIBERATE large multi-row gap, riding dedicated clear vertical lanes
+  // all the way down.
+  (function(){
+    var a = rect('node-emb'), b = rect('node-vla');
+    var laneX = 460;
+    var d = 'M '+laneX+' '+a.b+' L '+laneX+' '+b.cy+' L '+b.l+' '+b.cy;
+    draw(d, 'node-emb', 'node-vla');
+  })();
+  (function(){
+    var a = rect('node-emb'), b = rect('node-world');
+    var laneX = 470;
+    var d = 'M '+laneX+' '+a.b+' L '+laneX+' '+b.cy+' L '+b.r+' '+b.cy;
+    draw(d, 'node-emb', 'node-world');
+  })();
+
+  hedge('node-vla','node-world', 'left');
+
+  // Manipulation/Navigation (Row F, the concrete embodied competencies)
+  // feed VLA (Row L) — DELIBERATE multi-row gap; VLA policies are
+  // literally trained to produce these competencies, but the unifying VLA
+  // model concept is a much later (2023+) synthesis.
+  (function(){
+    var a = rect('node-manip'), b = rect('node-vla');
+    var dipY = 676, dodgeX = 280, bandY = 1180;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+dipY+' L '+dodgeX+' '+dipY+' L '+dodgeX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-manip', 'node-vla');
+  })();
+  (function(){
+    var a = rect('node-nav'), b = rect('node-vla');
+    var bandY = 1190, entryX = b.r - 12;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+entryX+' '+bandY+' L '+entryX+' '+b.t;
+    draw(d, 'node-nav', 'node-vla');
+  })();
+
+  // Modern alignment work is also deeply LLM-centric — LLMs feed Alignment
+  // & Safety directly too (separate from the RLHF -> Alignment edge above).
+  (function(){
+    var a = rect('node-18'), b = rect('node-align');
+    var dodgeX = 880;
+    var d = 'M '+a.r+' '+a.cy+' L '+dodgeX+' '+a.cy+' L '+dodgeX+' '+b.t;
+    draw(d, 'node-18', 'node-align');
+  })();
+
+  // ================= Row L -> Row L2 (2023-2025 concrete derivatives) =================
+  vedge('node-vla','node-diffpolicy', 0.5);
+  vedge('node-vla','node-hvla', 0.5);
+
+  // Generative AI (Row J) also feeds Diffusion/Flow Policy (Row L2).
+  (function(){
+    var a = rect('node-17'), b = rect('node-diffpolicy');
+    var dodgeX = 300, bandY = 1290;
+    var d = 'M '+a.r+' '+a.cy+' L '+dodgeX+' '+a.cy+' L '+dodgeX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-17', 'node-diffpolicy');
+  })();
+
+  vedge('node-world','node-videopred', 0.5);
+  vedge('node-world','node-jepa', 0.5);
+  // Multi-Modal Learning's contribution to JEPA.
+  (function(){
+    var a = rect('node-22'), b = rect('node-jepa');
+    var laneX = 300, bandY = 1290;
+    var d = 'M '+a.l+' '+a.cy+' L '+laneX+' '+a.cy+' L '+laneX+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-22', 'node-jepa');
+  })();
+
+  // ================= Row L2 -> Row M (AGI) =================
+  vedge('node-videopred','node-27', 0.5);
+  vedge('node-jepa','node-27', 0.5);
+  vedge('node-diffpolicy','node-27', 0.5);
+  vedge('node-hvla','node-27', 0.5);
+
+  // Deep RL's own algorithm families (Row H) also feed AGI directly —
+  // DELIBERATE large multi-row gap, riding the clear far-right lane.
+  (function(){
+    var a = rect('node-pgac'), b = rect('node-27');
+    var bandY = 876, laneX = 1460, riseY = 1392;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+laneX+' '+bandY+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-pgac', 'node-27');
+  })();
+  (function(){
+    var a = rect('node-marl'), b = rect('node-27');
+    var bandY = 880, laneX = 1460, riseY = 1396;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+laneX+' '+bandY+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-marl', 'node-27');
+  })();
+
+  vedge('node-23','node-25', 0.156);
+
+  (function(){
+    var a = rect('node-23'), b = rect('node-27');
+    var bandY = 1180, laneX = 1460, riseY = 1392;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+laneX+' '+bandY+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-23', 'node-27');
+  })();
+  (function(){
+    var a = rect('node-24'), b = rect('node-27');
+    // dodgeX moved from 970 to 865 (clear lane between Alignment & Safety
+    // and Interpretability, also clear through Rows L/L2) to avoid the new
+    // Preference Optimization (DPO) node now sitting at x=900-1050.
+    var bandY = 1180, dodgeX = 865, riseY = 1392;
+    var d = 'M '+a.cx+' '+a.b+' L '+a.cx+' '+bandY+' L '+dodgeX+' '+bandY+' L '+dodgeX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-24', 'node-27');
+  })();
+  (function(){
+    var a = rect('node-24'), b = rect('node-26');
+    var bandY = 1180;
+    var d = 'M '+a.r+' '+a.cy+' L '+a.r+' '+bandY+' L '+b.cx+' '+bandY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-24', 'node-26');
+  })();
+  vedge('node-25','node-27', 0.5);
+  vedge('node-26','node-27', 0.5);
+
+  // World Models -> AGI: multi-row gap, dedicated far-left lane.
+  (function(){
+    var a = rect('node-world'), b = rect('node-27');
+    var laneX = 90, riseY = 1392;
+    var d = 'M '+a.l+' '+a.cy+' L '+laneX+' '+a.cy+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-world', 'node-27');
+  })();
+
+  // Red Teaming & Eval (Row K, Alignment & Safety's terminal node) gates
+  // AGI claims directly.
+  (function(){
+    var a = rect('node-redteam'), b = rect('node-27');
+    var laneX = 1500, dropY = 1170, riseY = 1400;
+    var d = 'M '+a.r+' '+a.cy+' L '+a.r+' '+dropY+' L '+laneX+' '+dropY+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-redteam', 'node-27');
+  })();
+
+  // Anomaly Detection (Row G, Time Series' terminal node) -> AGI:
+  // DELIBERATE large multi-row gap, dedicated far-right lane.
+  (function(){
+    var a = rect('node-tsanomaly'), b = rect('node-27');
+    var laneX = 1470, riseY = 1404;
+    var d = 'M '+a.r+' '+a.cy+' L '+laneX+' '+a.cy+' L '+laneX+' '+riseY+' L '+b.cx+' '+riseY+' L '+b.cx+' '+b.t;
+    draw(d, 'node-tsanomaly', 'node-27');
+  })();
+
+  // ================= Row M -> Row N =================
+  sedge('node-27','node-28');
+
+  // ---- Pipeline highlighting ----
+  var ROOT = 'node-1';
+  var tree = document.getElementById('tree');
+  var resetBtn = document.getElementById('reset-btn');
+  var allNodes = Array.prototype.slice.call(document.querySelectorAll('.node'));
+  var selectedId = null;
+
+  // Collect every node and every edge that lies on ANY path from ROOT to
+  // targetId — walks all recorded parents (a node may have more than one)
+  // rather than picking a single chain, so a node with multiple incoming
+  // branches (e.g. fed by both node-21 and node-22) gets every branch lit.
+  function ancestorSubgraph(targetId){
+    var nodes = {};
+    var edges = []; // [from, to]
+    var visited = {};
+
+    (function walk(id){
+      if(visited[id]) return;
+      visited[id] = true;
+      nodes[id] = true;
+      if(id === ROOT) return;
+      var parents = adjacency[id] || [];
+      parents.forEach(function(p){
+        edges.push([p, id]);
+        walk(p);
+      });
+    })(targetId);
+
+    if(!nodes[ROOT]) return null; // unreachable (shouldn't happen)
+    return { nodes: nodes, edges: edges };
+  }
+
+  function setEdgeState(p, on){
+    p.classList.toggle('on-path', on);
+    p.setAttribute('marker-end', on ? 'url(#arrow-accent)' : 'url(#arrow)');
+  }
+
+  function clearSelection(){
+    selectedId = null;
+    tree.classList.remove('has-selection');
+    allNodes.forEach(function(n){ n.classList.remove('on-path','selected'); });
+    edgeEls.forEach(function(p){ setEdgeState(p, false); });
+    resetBtn.disabled = true;
+  }
+
+  function selectNode(id){
+    if(id === selectedId){ clearSelection(); return; }
+    var sub = ancestorSubgraph(id);
+    if(!sub) return;
+    selectedId = id;
+    tree.classList.add('has-selection');
+    allNodes.forEach(function(n){ n.classList.remove('on-path','selected'); });
+    edgeEls.forEach(function(p){ setEdgeState(p, false); });
+
+    Object.keys(sub.nodes).forEach(function(nid){
+      var el = document.getElementById(nid);
+      if(el) el.classList.add('on-path');
+    });
+    var target = document.getElementById(id);
+    if(target) target.classList.add('selected');
+
+    sub.edges.forEach(function(pair){
+      var from = pair[0], to = pair[1];
+      edgeEls.forEach(function(p){
+        if(p.dataset.from === from && p.dataset.to === to) setEdgeState(p, true);
+      });
+    });
+    resetBtn.disabled = false;
+  }
+
+  var exploreMode = false;
+  var modeToggle = document.getElementById('mode-toggle');
+
+  function activate(n){
+    if(exploreMode){
+      selectNode(n.id);
+    } else {
+      var href = n.getAttribute('data-href');
+      if(href && href !== '#') window.location.href = href;
+    }
+  }
+
+  allNodes.forEach(function(n){
+    n.addEventListener('click', function(){ activate(n); });
+    n.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        activate(n);
+      }
+    });
+  });
+
+  modeToggle.addEventListener('click', function(){
+    exploreMode = !exploreMode;
+    modeToggle.textContent = '경로 탐색 모드: ' + (exploreMode ? 'ON' : 'OFF');
+    modeToggle.classList.toggle('active', exploreMode);
+    if(!exploreMode) clearSelection();
+  });
+
+  resetBtn.addEventListener('click', clearSelection);
+
+  // ---- Domain filter ----
+  var domainBtns = Array.prototype.slice.call(document.querySelectorAll('.domain-btn'));
+  var activeDomain = null;
+
+  function clearDomainFilter(){
+    activeDomain = null;
+    tree.classList.remove('has-domain-filter');
+    allNodes.forEach(function(n){ n.classList.remove('dom-match'); });
+    edgeEls.forEach(function(p){ p.classList.remove('dom-edge'); });
+    domainBtns.forEach(function(b){ b.classList.remove('active'); });
+  }
+
+  function setDomainFilter(domain){
+    if(domain === activeDomain){ clearDomainFilter(); return; }
+    clearSelection(); // domain filter and path selection are mutually exclusive
+    activeDomain = domain;
+    tree.classList.add('has-domain-filter');
+    domainBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.domain === domain); });
+
+    var matched = {};
+    allNodes.forEach(function(n){
+      var isMatch = n.dataset.domain === domain;
+      n.classList.toggle('dom-match', isMatch);
+      if(isMatch) matched[n.id] = true;
+    });
+    // also light up edges that connect two matched nodes, so the
+    // within-domain lineage (e.g. RL -> Deep RL) reads as a sub-thread
+    edgeEls.forEach(function(p){
+      var on = matched[p.dataset.from] && matched[p.dataset.to];
+      p.classList.toggle('dom-edge', !!on);
+    });
+  }
+
+  domainBtns.forEach(function(b){
+    b.addEventListener('click', function(){ setDomainFilter(b.dataset.domain); });
+  });
+
+  // clicking a node while a domain filter is active also clears it, so the
+  // path-highlight and domain-filter modes never fight over the same DOM
+  allNodes.forEach(function(n){
+    n.addEventListener('click', function(){ if(activeDomain) clearDomainFilter(); });
+  });
+})();
+</script>
