@@ -53,6 +53,8 @@
   }
   .board-node.dragging{ cursor:grabbing; box-shadow:0 14px 32px rgba(0,0,0,.5); z-index:5; }
   .board-node.connect-source{ outline:2px solid var(--paper); outline-offset:2px; }
+  .board-node.collapsed{ display:none; }
+  .board-node.focus-center{ outline:2px solid var(--success); outline-offset:2px; }
   .board-node[data-kind="paper"]{ border-left-color:var(--paper); }
   .board-node[data-kind="finding"]{ border-left-color:var(--finding); }
   .board-node[data-kind="experiment"][data-status="success"]{ border-left-color:var(--success); }
@@ -107,6 +109,42 @@
   }
   .zoomgrp button:last-child{ border-right:0; }
   .zoomgrp button:hover{ background:var(--panel-2); }
+
+  #search-wrap{ position:relative; }
+  #search-input{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink);
+    background:var(--panel); border:1px solid var(--line); border-radius:7px; padding:7px 10px;
+    width:180px; box-shadow:var(--shadow);
+  }
+  #search-input::placeholder{ color:var(--ink-faint); }
+  #search-results{
+    position:absolute; top:calc(100% + 4px); left:0; width:320px; max-height:360px; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:var(--shadow);
+    display:none; z-index:25;
+  }
+  #search-results.show{ display:block; }
+  #search-results a{
+    display:block; padding:8px 10px; font-size:12px; color:var(--ink); text-decoration:none;
+    border-bottom:1px solid var(--line-soft);
+  }
+  #search-results a:last-child{ border-bottom:0; }
+  #search-results a:hover{ background:var(--panel-2); }
+  #search-results a span{ display:block; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-faint); margin-top:2px; }
+  #search-results .empty{ padding:10px; font-size:11.5px; color:var(--ink-faint); }
+
+  #focus-status{
+    position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:20;
+    display:none; align-items:center; gap:10px;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--success);
+    background:var(--panel); border:1px solid var(--success); border-radius:7px; padding:7px 14px;
+    box-shadow:var(--shadow);
+  }
+  #focus-status.show{ display:flex; }
+  #focus-status button{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--line); border-radius:5px; padding:3px 9px; cursor:pointer;
+  }
+  #focus-status button:hover{ border-color:var(--paper); }
 
   #legend{
     position:fixed; left:16px; bottom:16px; z-index:20; display:flex; gap:14px;
@@ -183,6 +221,7 @@
     <p>
       Claude와의 대화에서 "이 논문 여기 추가해줘"라고 말하면 노트가 이 보드에 바로 올라옵니다.
       직접 빠른 메모를 남기려면 오른쪽 위 "+ 노드" 버튼을 쓰세요. 배경을 드래그해 이동, 휠로 확대/축소할 수 있습니다.
+      노드를 클릭하면 직접 연결된 노드만 남기고 나머지는 접어둡니다(다시 클릭하면 해제).
     </p>
   </div>
 </div>
@@ -194,6 +233,10 @@
     <span class="name">Paper Trail</span>
     <span class="tag mono">// research board</span>
   </div>
+  <div id="search-wrap">
+    <input type="text" id="search-input" placeholder="노드 검색..." autocomplete="off">
+    <div id="search-results"></div>
+  </div>
   <button type="button" class="tbtn" id="btn-add">＋ 노드</button>
   <button type="button" class="tbtn" id="btn-connect">🔗 연결</button>
   <div class="zoomgrp">
@@ -201,6 +244,11 @@
     <button type="button" id="btn-zoom-reset">100%</button>
     <button type="button" id="btn-zoom-in">＋</button>
   </div>
+</div>
+
+<div id="focus-status">
+  <span id="focus-status-text"></span>
+  <button type="button" id="btn-focus-exit">전체 보기 ↩</button>
 </div>
 
 <div id="legend">
@@ -265,18 +313,19 @@
     return { x: (clientX - r.left - tx) / scale, y: (clientY - r.top - ty) / scale };
   }
 
-  // ---- pan ----
-  var panning = false, panStartX = 0, panStartY = 0, panTx0 = 0, panTy0 = 0;
+  // ---- pan (+ click-empty-space-to-exit-focus) ----
+  var panning = false, panStartX = 0, panStartY = 0, panTx0 = 0, panTy0 = 0, panMoved = false;
   viewport.addEventListener('pointerdown', function(e){
     if(e.target.closest('.board-node')) return;
     if(connectMode) { cancelConnect(); return; }
-    panning = true;
+    panning = true; panMoved = false;
     viewport.classList.add('panning');
     panStartX = e.clientX; panStartY = e.clientY; panTx0 = tx; panTy0 = ty;
     viewport.setPointerCapture(e.pointerId);
   });
   viewport.addEventListener('pointermove', function(e){
     if(panning){
+      if(Math.abs(e.clientX - panStartX) > 4 || Math.abs(e.clientY - panStartY) > 4) panMoved = true;
       tx = panTx0 + (e.clientX - panStartX);
       ty = panTy0 + (e.clientY - panStartY);
       applyTransform();
@@ -284,7 +333,11 @@
     if(connectMode && pendingSource){ drawGhostEdge(e.clientX, e.clientY); }
   });
   viewport.addEventListener('pointerup', function(e){
-    if(panning){ panning = false; viewport.classList.remove('panning'); }
+    if(panning){
+      panning = false;
+      viewport.classList.remove('panning');
+      if(!panMoved && focusMode) exitFocus();
+    }
   });
 
   // ---- zoom ----
@@ -315,7 +368,10 @@
   }
   connectBtn.addEventListener('click', function(){ setConnectMode(!connectMode); });
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape'){ if(pendingSource) cancelConnect(); else setConnectMode(false); }
+    if(e.key !== 'Escape') return;
+    if(pendingSource) cancelConnect();
+    else if(connectMode) setConnectMode(false);
+    else if(focusMode) exitFocus();
   });
 
   function cancelConnect(){
@@ -349,6 +405,86 @@
     var s = Math.min(scaleX, scaleY);
     return { x: c.x + dx * s, y: c.y + dy * s };
   }
+
+  // ---- focus mode (Obsidian-style local graph): click a node to show only
+  // it + its direct neighbors, collapsing (hiding) everything else ----
+  var focusMode = false, focusCenter = null, focusedSet = null;
+  var focusStatus = document.getElementById('focus-status');
+  var focusStatusText = document.getElementById('focus-status-text');
+
+  function neighborsOf(id){
+    var set = {}; set[id] = true;
+    Object.keys(edges).forEach(function(eid){
+      var e = edges[eid];
+      if(e.from === id) set[e.to] = true;
+      if(e.to === id) set[e.from] = true;
+    });
+    return set;
+  }
+
+  function enterFocus(id){
+    if(!nodeEls[id]) return;
+    focusCenter = id;
+    focusedSet = neighborsOf(id);
+    focusMode = true;
+    applyFocusVisibility();
+    fitViewToIds(Object.keys(focusedSet));
+    updateFocusUI();
+  }
+
+  function exitFocus(){
+    focusMode = false; focusCenter = null; focusedSet = null;
+    applyFocusVisibility();
+    updateFocusUI();
+  }
+
+  function toggleFocus(id){
+    if(focusMode && focusCenter === id){ exitFocus(); return; }
+    enterFocus(id);
+  }
+
+  function applyFocusVisibility(){
+    var total = Object.keys(nodeEls).length;
+    Object.keys(nodeEls).forEach(function(id){
+      var el = nodeEls[id];
+      var show = !focusMode || focusedSet[id];
+      el.classList.toggle('collapsed', !show);
+      el.classList.toggle('focus-center', focusMode && id === focusCenter);
+    });
+    redrawEdges();
+    if(focusMode){
+      var shown = Object.keys(focusedSet).length;
+      focusStatusText.textContent = shown + '개 표시 · ' + (total - shown) + '개 접힘';
+    }
+  }
+
+  function updateFocusUI(){
+    focusStatus.classList.toggle('show', focusMode);
+  }
+
+  function fitViewToIds(ids){
+    var xs = [], ys = [];
+    ids.forEach(function(id){
+      var n = nodes[id];
+      if(!n) return;
+      xs.push(n.x || 0, (n.x || 0) + 240);
+      ys.push(n.y || 0, (n.y || 0) + 90);
+    });
+    if(!xs.length) return;
+    var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+    var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+    var vp = viewport.getBoundingClientRect();
+    var pad = 90;
+    var s = Math.min((vp.width - pad * 2) / Math.max(1, maxX - minX), (vp.height - pad * 2) / Math.max(1, maxY - minY), 1.4);
+    s = Math.max(0.25, Math.min(2.5, s));
+    var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    scale = s;
+    tx = vp.width / 2 - cx * s;
+    ty = vp.height / 2 - cy * s;
+    applyTransform();
+  }
+
+  document.getElementById('btn-focus-exit').addEventListener('click', exitFocus);
 
   // ---- rendering ----
   function kindLabel(n){
@@ -389,6 +525,10 @@
     } else {
       meta.style.display = 'none';
     }
+    if(focusMode){
+      el.classList.toggle('collapsed', !focusedSet[id]);
+      el.classList.toggle('focus-center', id === focusCenter);
+    }
   }
 
   function removeNodeEl(id){
@@ -401,6 +541,7 @@
       var e = edges[id];
       var a = nodeEls[e.from], b = nodeEls[e.to];
       if(!a || !b) return;
+      if(focusMode && !(focusedSet[e.from] && focusedSet[e.to])) return;
       var ca = centerOf(a), cb = centerOf(b);
       var p1 = edgePoint(a, cb.x, cb.y), p2 = edgePoint(b, ca.x, ca.y);
       var path = document.createElementNS('http://www.w3.org/2000/svg','path');
@@ -429,7 +570,7 @@
 
   // ---- node drag + delete + connect-click ----
   function wireNodeEvents(el){
-    var dragging = false, sx = 0, sy = 0, x0 = 0, y0 = 0;
+    var dragging = false, moved = false, sx = 0, sy = 0, x0 = 0, y0 = 0;
     el.addEventListener('pointerdown', function(e){
       if(e.target.closest('.del')) return;
       var id = el.dataset.id;
@@ -444,7 +585,7 @@
         }
         return;
       }
-      dragging = true;
+      dragging = true; moved = false;
       el.classList.add('dragging');
       sx = e.clientX; sy = e.clientY;
       x0 = parseFloat(el.style.left); y0 = parseFloat(el.style.top);
@@ -453,6 +594,7 @@
     });
     el.addEventListener('pointermove', function(e){
       if(!dragging) return;
+      if(Math.abs(e.clientX - sx) > 4 || Math.abs(e.clientY - sy) > 4) moved = true;
       var dx = (e.clientX - sx) / scale, dy = (e.clientY - sy) / scale;
       el.style.left = (x0 + dx) + 'px';
       el.style.top = (y0 + dy) + 'px';
@@ -463,9 +605,13 @@
       dragging = false;
       el.classList.remove('dragging');
       var id = el.dataset.id;
-      var x = parseFloat(el.style.left), y = parseFloat(el.style.top);
-      nodes[id] = Object.assign({}, nodes[id], { x: x, y: y });
-      persistNodePosition(id, x, y);
+      if(moved){
+        var x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+        nodes[id] = Object.assign({}, nodes[id], { x: x, y: y });
+        persistNodePosition(id, x, y);
+      } else {
+        toggleFocus(id);
+      }
     });
     el.querySelector('.del').addEventListener('click', function(e){
       e.stopPropagation();
@@ -502,6 +648,7 @@
     redrawEdges();
     emptyState.classList.toggle('hide', Object.keys(nodes).length > 0);
     if(nodesCol) nodesCol.doc(id).delete().catch(function(){});
+    if(focusMode && id === focusCenter) exitFocus();
   }
 
   function addNodeFromComposer(data){
@@ -584,6 +731,55 @@
     document.getElementById('c-cancel').click();
   });
   updateComposerFields();
+
+  // ---- search (find a node by title, jump into focus on it) ----
+  var searchWrap = document.getElementById('search-wrap');
+  var searchInput = document.getElementById('search-input');
+  var searchResults = document.getElementById('search-results');
+
+  function renderSearchResults(list){
+    if(!list.length){
+      searchResults.innerHTML = '<div class="empty">검색 결과 없음</div>';
+      return;
+    }
+    searchResults.innerHTML = list.slice(0, 12).map(function(id){
+      var n = nodes[id];
+      return '<a href="#" data-id="' + id + '">' + (n.title || '(제목 없음)') +
+        '<span>' + kindLabel(n) + (n.authors ? ' · ' + n.authors : '') + '</span></a>';
+    }).join('');
+  }
+  searchInput.addEventListener('input', function(){
+    var q = searchInput.value.trim().toLowerCase();
+    searchWrap.classList.toggle('open', !!q);
+    searchResults.classList.toggle('show', !!q);
+    if(!q){ searchResults.innerHTML = ''; return; }
+    var matches = Object.keys(nodes).filter(function(id){
+      var n = nodes[id];
+      return (n.title || '').toLowerCase().indexOf(q) !== -1 ||
+             (n.authors || '').toLowerCase().indexOf(q) !== -1;
+    });
+    renderSearchResults(matches);
+  });
+  searchResults.addEventListener('click', function(e){
+    var a = e.target.closest('a[data-id]');
+    if(!a) return;
+    e.preventDefault();
+    enterFocus(a.getAttribute('data-id'));
+    searchResults.classList.remove('show');
+    searchInput.value = '';
+  });
+  document.addEventListener('click', function(e){
+    if(!searchWrap.contains(e.target)) searchResults.classList.remove('show');
+  });
+  searchInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      var first = searchResults.querySelector('a');
+      if(first) first.click();
+    } else if(e.key === 'Escape'){
+      searchResults.classList.remove('show');
+      searchInput.blur();
+    }
+  });
 
   applyTransform();
   initDb();
