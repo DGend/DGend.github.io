@@ -20,6 +20,28 @@
     return score;
   }
 
+  // radius bands: main nodes (original 28 chapters) live in the small inner
+  // circle, sub nodes (30 augmented nodes) in the larger outer ring. Score
+  // (category + tag overlap + recency) only fine-tunes radius *within* each
+  // node's own band, normalized against that band's own score range.
+  var BANDS = {
+    main: { rMin: 40, rMax: 100 },
+    sub: { rMin: 130, rMax: 200 },
+  };
+
+  function placeInBand(items, band){
+    var scores = items.map(function(it){ return it.score; });
+    var max = scores.length ? Math.max.apply(null, scores) : 1;
+    var min = scores.length ? Math.min.apply(null, scores) : 0;
+    var span = Math.max(1, max - min);
+    return items.map(function(it, i){
+      var angle = (2 * Math.PI * i / items.length) - Math.PI / 2;
+      var norm = (it.score - min) / span; // 0..1, higher score = higher norm
+      var r = band.rMax - norm * (band.rMax - band.rMin);
+      return { item: it, angle: angle, r: r };
+    });
+  }
+
   function render(root){
     var nodeId = root.getAttribute('data-node-id');
     var nodes = window.AI_TECHTREE_NODES || [];
@@ -30,33 +52,31 @@
     var ranked = nodes
       .filter(function(n){ return n.id !== nodeId; })
       .map(function(n){ return { node: n, score: scoreOf(current, n) }; })
+      .filter(function(it){ return it.score > 0; })
       .sort(function(a, b){ return b.score - a.score; });
 
-    var maxScore = ranked.length ? ranked[0].score : 1;
-    var minScore = ranked.length ? ranked[ranked.length - 1].score : 0;
-    var span = Math.max(1, maxScore - minScore);
-
-    var orbitCount = Math.min(16, ranked.length);
-    var orbitItems = ranked.slice(0, orbitCount);
+    var mainRanked = ranked.filter(function(it){ return it.node.type === 'main'; }).slice(0, 10);
+    var subRanked = ranked.filter(function(it){ return it.node.type !== 'main'; }).slice(0, 14);
     var cardItems = ranked.slice(0, Math.min(24, ranked.length));
 
     var W = 640, H = 420, cx = W / 2, cy = H / 2;
-    var minR = 55, maxR = 190;
+    var placed = placeInBand(mainRanked, BANDS.main).concat(placeInBand(subRanked, BANDS.sub));
 
-    var svgParts = ['<circle class="rc-guide" cx="' + cx + '" cy="' + cy + '" r="' + ((minR + maxR) / 2) + '"></circle>'];
+    var svgParts = [
+      '<circle class="rc-guide rc-guide-main" cx="' + cx + '" cy="' + cy + '" r="' + BANDS.main.rMax + '"></circle>',
+      '<circle class="rc-guide" cx="' + cx + '" cy="' + cy + '" r="' + BANDS.sub.rMax + '"></circle>',
+    ];
     var dotsHtml = [];
-    orbitItems.forEach(function(item, i){
-      var angle = (2 * Math.PI * i / orbitItems.length) - Math.PI / 2;
-      var norm = (item.score - minScore) / span; // 0..1, higher score = higher norm
-      var r = maxR - norm * (maxR - minR);
-      var x = cx + r * Math.cos(angle);
-      var y = cy + r * Math.sin(angle);
+    placed.forEach(function(p2){
+      var item = p2.item;
+      var x = cx + p2.r * Math.cos(p2.angle);
+      var y = cy + p2.r * Math.sin(p2.angle);
       var sameCat = item.node.category === current.category;
       svgParts.push(
         '<line data-id="' + item.node.id + '" x1="' + cx + '" y1="' + cy + '" x2="' + x + '" y2="' + y + '"></line>'
       );
       dotsHtml.push(
-        '<div class="rc-node' + (sameCat ? ' same-cat' : '') + '" data-id="' + item.node.id +
+        '<div class="rc-node type-' + item.node.type + (sameCat ? ' same-cat' : '') + '" data-id="' + item.node.id +
         '" style="left:' + (x / W * 100) + '%; top:' + (y / H * 100) + '%;" title="' + item.node.title + '"></div>'
       );
     });
@@ -65,7 +85,8 @@
     orbitEl.innerHTML =
       '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + svgParts.join('') + '</svg>' +
       '<div class="rc-center"><span class="rc-center-dot"></span><span class="rc-center-label">' + current.title + '</span></div>' +
-      dotsHtml.join('');
+      dotsHtml.join('') +
+      '<div class="rc-legend"><span><i class="type-main"></i>원본 노드</span><span><i class="type-sub"></i>보강 노드</span></div>';
 
     var cardsEl = root.querySelector('.rc-cards');
     root.querySelector('.rc-next-count').textContent = cardItems.length;
