@@ -4,7 +4,8 @@
 // Both views stay in sync on hover/click. Self-inits off #reading-compass-root.
 (function(){
   function prefix(){
-    return location.pathname.indexOf('/blocks/') !== -1 ? '../../' : './';
+    var path = location.pathname;
+    return (path.indexOf('/blocks/') !== -1 || path.indexOf('/posts/') !== -1) ? '../../' : './';
   }
 
   function scoreOf(current, other){
@@ -97,7 +98,7 @@
       return (
         '<div class="rc-card" data-id="' + item.node.id + '">' +
           '<span class="rc-rank">' + String(i + 1).padStart(2, '0') + '</span>' +
-          '<a class="rc-card-title" href="' + p + 'blocks/' + item.node.id + '/index.html">' + item.node.title + '</a>' +
+          '<a class="rc-card-title" href="' + p + item.node.href + '">' + item.node.title + '</a>' +
           '<div class="rc-card-meta">' +
             '<span>' + item.node.updated + '</span>' +
             '<a class="rc-card-cat" href="' + p + 'archive.html?category=' + encodeURIComponent(item.node.category) + '">' + item.node.category + '</a>' +

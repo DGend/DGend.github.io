@@ -1,8 +1,12 @@
 // Shared site chrome: renders the top category/search bar into #site-topbar
 // (data from nodes-index.js) and wires the block-page TOC scrollspy, if present.
 (function(){
+  function isDetailPage(path){
+    return path.indexOf('/blocks/') !== -1 || path.indexOf('/posts/') !== -1;
+  }
+
   function prefix(){
-    return location.pathname.indexOf('/blocks/') !== -1 ? '../../' : './';
+    return isDetailPage(location.pathname) ? '../../' : './';
   }
 
   // `root` (.site-search) expanding/collapsing is driven by the search icon
@@ -16,7 +20,7 @@
         return;
       }
       results.innerHTML = list.slice(0, 8).map(function(n){
-        return '<a href="' + p + 'blocks/' + n.id + '/index.html">' + n.title +
+        return '<a href="' + p + n.href + '">' + n.title +
           '<span class="cat">' + n.category + '</span></a>';
       }).join('');
     }
@@ -46,7 +50,7 @@
   // which flat nav item (if any) matches the current page, for the active underline
   function activeNavKey(){
     var path = location.pathname;
-    if(path.indexOf('/blocks/') !== -1) return null;
+    if(isDetailPage(path)) return null;
     if(/categories\.html$/.test(path)) return 'categories';
     if(/archive\.html$/.test(path)) return 'archive';
     if(/docs\.html$/.test(path)) return 'docs';

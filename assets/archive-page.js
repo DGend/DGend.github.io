@@ -80,7 +80,7 @@
               '<time>' + n.updated + '</time>' +
               '<div>' +
                 '<div class="feed-row-head">' +
-                  '<a href="./blocks/' + n.id + '/index.html">' + n.title + '</a>' +
+                  '<a href="./' + n.href + '">' + n.title + '</a>' +
                   '<a class="badge" href="./archive.html?category=' + encodeURIComponent(n.category) + '">' + n.category + '</a>' +
                   '<span class="readtime">' + n.readMin + ' 분 읽기</span>' +
                 '</div>' +

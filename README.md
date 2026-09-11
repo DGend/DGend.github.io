@@ -42,3 +42,10 @@ blocks/
 - `techtree-node-add` / `techtree-category-add` / `techtree-paper-link` 스킬로 홈(`index.html`)에 노드를 추가하면, 이 스킬을 다시 실행해 대응하는 `blocks/<id>/` 폴더를 함께 생성해야 합니다 (현재는 수동 동기화).
 - 각 블럭 페이지의 "개요" 스텁을 실제 콘텐츠로 채우는 작업.
 - Notion "한글 원본 챕터" DB와의 연동(계획 문서 참고) — 원본 28개 노드는 기존 Notion 페이지로 링크하거나, 여기 GitHub Pages 콘텐츠를 정본으로 삼고 Notion에서 임베드하는 방향 중 택일 필요.
+
+## 논문 리뷰 / 블로그 글 추가 (파일 기반, 프롬프트 불필요)
+
+테크트리 노드 58개와 별개로, `content/<카테고리 폴더>/<slug>.md` 형태로 마크다운
+파일을 놓고 `python3 scripts/build_content.py`를 실행하면 `posts/<slug>/index.html`
+페이지가 자동 생성되고 검색·Archive·Categories·Docs·Series·Reading Compass에
+전부 반영됩니다. 자세한 프런트매터 스키마는 `content/README.md` 참고.

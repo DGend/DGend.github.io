@@ -25,7 +25,7 @@
       return (
         '<div class="feed-card">' +
           '<a class="badge" href="' + categoryHref(n.category) + '">' + n.category + '</a>' +
-          '<h3><a href="./blocks/' + n.id + '/index.html">' + n.title + '</a></h3>' +
+          '<h3><a href="./' + n.href + '">' + n.title + '</a></h3>' +
           '<p>' + n.excerpt + '</p>' +
           '<div class="feed-card-meta">' + n.updated + ' &middot; ' + n.readMin + ' 분 읽기</div>' +
         '</div>'
@@ -38,7 +38,7 @@
           '<time>' + n.updated + '</time>' +
           '<div>' +
             '<div class="feed-row-head">' +
-              '<a href="./blocks/' + n.id + '/index.html">' + n.title + '</a>' +
+              '<a href="./' + n.href + '">' + n.title + '</a>' +
               '<a class="badge" href="' + categoryHref(n.category) + '">' + n.category + '</a>' +
               '<span class="readtime">' + n.readMin + ' 분 읽기</span>' +
             '</div>' +
