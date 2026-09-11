@@ -292,9 +292,15 @@ a.category-btn:hover{ opacity:.85; transform:translateY(-1px); }
 }
 .row-item:hover{ border-color:var(--accent); }
 .row-item .badge{
-  font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
-  border:1px solid var(--line); border-radius:5px; padding:2px 8px; white-space:nowrap;
+  font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600;
+  border-radius:5px; padding:3px 9px; white-space:nowrap;
 }
+.row-item .badge-core{ background:var(--accent-bg, var(--chrome-accent-bg)); color:var(--accent); }
+.row-item .badge-domain{ background:#e7e0f5; color:#6b4fc4; }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .row-item .badge-domain{ background:#2a2440; color:#b6a3f0; }
+}
+:root[data-theme="dark"] .row-item .badge-domain{ background:#2a2440; color:#b6a3f0; }
 .row-item .row-title{ font-size:14.5px; font-weight:600; flex:1 1 auto; }
 .row-item .row-count{
   font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent);

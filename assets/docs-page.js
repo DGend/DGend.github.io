@@ -2,8 +2,8 @@
 // a flat row index (group badge + name + count) instead of a card grid.
 (function(){
   var GROUPS = [
-    ['핵심 개념', ['AI 기초 / 핵심 개념']],
-    ['응용 분야', [
+    ['핵심 개념', 'core', ['AI 기초 / 핵심 개념']],
+    ['응용 분야', 'domain', [
       'Computer Vision', 'NLP / LLM', 'Reinforcement Learning',
       'Generative / Multi-Modal', 'Robotics / Embodied AI',
       'Alignment & Safety', 'Time Series',
@@ -17,14 +17,13 @@
 
     var html = '';
     GROUPS.forEach(function(group){
-      var groupLabel = group[0];
-      group[1].forEach(function(cat){
+      var groupLabel = group[0], groupClass = group[1];
+      group[2].forEach(function(cat){
         if(!counts[cat]) return;
         html +=
           '<a class="row-item" href="./archive.html?category=' + encodeURIComponent(cat) + '">' +
-            '<span class="badge">' + groupLabel + '</span>' +
+            '<span class="badge badge-' + groupClass + '">' + groupLabel + '</span>' +
             '<span class="row-title">' + cat + '</span>' +
-            '<span class="row-count">' + counts[cat] + '</span>' +
             '<span class="chev">&#8250;</span>' +
           '</a>';
       });
