@@ -124,6 +124,10 @@
         var id = el.getAttribute('data-id');
         pinned = pinned === id ? null : id;
         setActive(pinned);
+        if(pinned){
+          var card = root.querySelector('.rc-card[data-id="' + pinned + '"]');
+          if(card) card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
       });
     });
   }

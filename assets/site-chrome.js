@@ -5,6 +5,8 @@
     return location.pathname.indexOf('/blocks/') !== -1 ? '../../' : './';
   }
 
+  // `root` (.site-search) expanding/collapsing is driven by the search icon
+  // button (renderTopbar); this only ever toggles the results dropdown itself.
   function wireSearch(root, results, input, p){
     var nodes = window.AI_TECHTREE_NODES || [];
 
@@ -21,26 +23,48 @@
 
     input.addEventListener('input', function(){
       var q = input.value.trim().toLowerCase();
-      root.classList.toggle('open', q.length > 0);
+      results.style.display = q ? 'block' : 'none';
       if(!q){ results.innerHTML = ''; return; }
       render(nodes.filter(function(n){
         return n.title.toLowerCase().indexOf(q) !== -1 || n.id.indexOf(q) !== -1;
       }));
     });
-    input.addEventListener('focus', function(){
-      if(input.value.trim()) root.classList.add('open');
-    });
     document.addEventListener('click', function(e){
-      if(!root.contains(e.target)) root.classList.remove('open');
+      if(!root.contains(e.target)) results.style.display = 'none';
     });
     input.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){
         var first = results.querySelector('a');
         if(first) window.location.href = first.getAttribute('href');
       } else if(e.key === 'Escape'){
-        root.classList.remove('open');
+        results.style.display = 'none';
         input.blur();
       }
+    });
+  }
+
+  function isHomePage(){
+    var path = location.pathname;
+    return path.indexOf('/blocks/') === -1 && path.indexOf('/list.html') === -1;
+  }
+
+  function wireTheme(){
+    var toggle = document.getElementById('theme-toggle');
+    var label = document.getElementById('theme-label');
+    if(!toggle) return;
+    var stored = null;
+    try { stored = localStorage.getItem('ai-techtree-theme'); } catch(e){}
+    var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var isDark = stored ? stored === 'dark' : systemDark;
+    toggle.checked = isDark;
+    label.textContent = isDark ? 'DARK' : 'LIGHT';
+    if(stored) document.documentElement.setAttribute('data-theme', stored);
+
+    toggle.addEventListener('change', function(){
+      var theme = toggle.checked ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      label.textContent = theme.toUpperCase();
+      try { localStorage.setItem('ai-techtree-theme', theme); } catch(e){}
     });
   }
 
@@ -53,22 +77,53 @@
       ['gen', 'Generative / Multi-Modal'], ['robot', 'Robotics / Embodied'],
       ['safety', 'Alignment & Safety'], ['ts', 'Time Series']
     ];
-    var cats = domains.map(function(d){
+    var catLinks = domains.map(function(d){
       return '<a href="' + p + 'index.html?domain=' + d[0] + '">' + d[1] + '</a>';
-    }).join('');
+    }).join('') + '<a href="' + p + 'index.html">전체 테크트리</a>';
+
     mount.innerHTML =
-      '<a class="brand" href="' + p + 'index.html">AI 테크트리</a>' +
-      '<nav class="cats">' + cats + '</nav>' +
-      '<div class="site-search" id="site-search">' +
-        '<input type="text" id="site-search-input" placeholder="노드 검색..." autocomplete="off">' +
-        '<div class="results" id="site-search-results"></div>' +
+      '<a class="brand' + (isHomePage() ? ' active' : '') + '" href="' + p + 'index.html">AI 테크트리</a>' +
+      '<nav class="cats">' +
+        '<div class="dropdown" id="cat-dropdown">' +
+          '<button type="button" class="dropdown-toggle">Categories</button>' +
+          '<div class="dropdown-menu">' + catLinks + '</div>' +
+        '</div>' +
+      '</nav>' +
+      '<div class="topbar-right">' +
+        '<button type="button" class="icon-btn" id="site-search-toggle" aria-label="검색">&#128269;</button>' +
+        '<div class="site-search" id="site-search">' +
+          '<input type="text" id="site-search-input" placeholder="노드 검색..." autocomplete="off">' +
+          '<div class="results" id="site-search-results"></div>' +
+        '</div>' +
+        '<label class="theme-switch">' +
+          '<span class="theme-label" id="theme-label">DARK</span>' +
+          '<input type="checkbox" id="theme-toggle">' +
+          '<span class="switch-track"><span class="switch-thumb"></span></span>' +
+        '</label>' +
       '</div>';
+
     wireSearch(
       document.getElementById('site-search'),
       document.getElementById('site-search-results'),
       document.getElementById('site-search-input'),
       p
     );
+    document.getElementById('site-search-toggle').addEventListener('click', function(){
+      var box = document.getElementById('site-search');
+      box.classList.toggle('open');
+      if(box.classList.contains('open')) document.getElementById('site-search-input').focus();
+    });
+
+    var catDropdown = document.getElementById('cat-dropdown');
+    catDropdown.querySelector('.dropdown-toggle').addEventListener('click', function(e){
+      e.stopPropagation();
+      catDropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', function(e){
+      if(!catDropdown.contains(e.target)) catDropdown.classList.remove('open');
+    });
+
+    wireTheme();
   }
 
   function initTOC(){
