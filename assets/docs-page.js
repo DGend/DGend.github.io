@@ -21,7 +21,7 @@
       group[1].forEach(function(cat){
         if(!counts[cat]) return;
         html +=
-          '<a class="row-item" href="./list.html?type=category&value=' + encodeURIComponent(cat) + '">' +
+          '<a class="row-item" href="./archive.html?category=' + encodeURIComponent(cat) + '">' +
             '<span class="badge">' + groupLabel + '</span>' +
             '<span class="row-title">' + cat + '</span>' +
             '<span class="row-count">' + counts[cat] + '</span>' +

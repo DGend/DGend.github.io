@@ -91,14 +91,16 @@
     var cardsEl = root.querySelector('.rc-cards');
     root.querySelector('.rc-next-count').textContent = cardItems.length;
     cardsEl.innerHTML = cardItems.map(function(item, i){
-      var tags = (item.node.tags || []).slice(0, 4).map(function(t){ return '<span>#' + t + '</span>'; }).join('');
+      var tags = (item.node.tags || []).slice(0, 4).map(function(t){
+        return '<a href="' + p + 'archive.html?tag=' + encodeURIComponent(t) + '">#' + t + '</a>';
+      }).join('');
       return (
         '<div class="rc-card" data-id="' + item.node.id + '">' +
           '<span class="rc-rank">' + String(i + 1).padStart(2, '0') + '</span>' +
           '<a class="rc-card-title" href="' + p + 'blocks/' + item.node.id + '/index.html">' + item.node.title + '</a>' +
           '<div class="rc-card-meta">' +
             '<span>' + item.node.updated + '</span>' +
-            '<span class="rc-card-cat">' + item.node.category + '</span>' +
+            '<a class="rc-card-cat" href="' + p + 'archive.html?category=' + encodeURIComponent(item.node.category) + '">' + item.node.category + '</a>' +
             '<span class="rc-card-score">score ' + item.score + '</span>' +
           '</div>' +
           '<div class="rc-card-tags">' + tags + '</div>' +

@@ -19,7 +19,7 @@
     var html = SERIES.filter(function(s){ return counts[s[0]]; }).map(function(s){
       var cat = s[0], desc = s[1];
       return (
-        '<a class="row-item" href="./list.html?type=category&value=' + encodeURIComponent(cat) + '">' +
+        '<a class="row-item" href="./archive.html?category=' + encodeURIComponent(cat) + '">' +
           '<span class="row-title">' + cat + '<span class="row-sub">' + desc + '</span></span>' +
           '<span class="row-count">' + counts[cat] + ' episodes</span>' +
           '<span class="chev">&#8250;</span>' +

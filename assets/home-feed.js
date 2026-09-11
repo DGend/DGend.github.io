@@ -17,10 +17,14 @@
       .sort(function(a, b){ return b.updated.localeCompare(a.updated) || a.title.localeCompare(b.title); })
       .slice(0, RECENT_LIMIT);
 
+    function categoryHref(cat){
+      return './archive.html?category=' + encodeURIComponent(cat);
+    }
+
     var pinnedHtml = pinned.map(function(n){
       return (
         '<div class="feed-card">' +
-          '<span class="badge">' + n.category + '</span>' +
+          '<a class="badge" href="' + categoryHref(n.category) + '">' + n.category + '</a>' +
           '<h3><a href="./blocks/' + n.id + '/index.html">' + n.title + '</a></h3>' +
           '<p>' + n.excerpt + '</p>' +
           '<div class="feed-card-meta">' + n.updated + ' &middot; ' + n.readMin + ' 분 읽기</div>' +
@@ -35,7 +39,7 @@
           '<div>' +
             '<div class="feed-row-head">' +
               '<a href="./blocks/' + n.id + '/index.html">' + n.title + '</a>' +
-              '<span class="badge">' + n.category + '</span>' +
+              '<a class="badge" href="' + categoryHref(n.category) + '">' + n.category + '</a>' +
               '<span class="readtime">' + n.readMin + ' 분 읽기</span>' +
             '</div>' +
             '<p>' + n.excerpt + '</p>' +

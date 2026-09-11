@@ -16,7 +16,7 @@
 
     function card(cat){
       return (
-        '<a class="cat-card" href="./list.html?type=category&value=' + encodeURIComponent(cat) + '">' +
+        '<a class="cat-card" href="./archive.html?category=' + encodeURIComponent(cat) + '">' +
           '<div class="cat-name"><i>&#9670;</i>' + cat + '</div>' +
           '<div class="cat-count">' + (counts[cat] || 0) + ' posts</div>' +
         '</a>'
