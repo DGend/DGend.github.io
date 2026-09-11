@@ -16,26 +16,26 @@
 }
 
 /* Always dark, regardless of page theme (matches the reference nav bar). */
-.site-topbar{
+#site-topbar{
   position:sticky; top:0; z-index:50;
   display:flex; align-items:center; gap:28px;
   padding:12px 24px; background:#0b0f10; border-bottom:1px solid #1c2422; color:#e9ece9;
   font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
 }
-.site-topbar .brand{
+#site-topbar .brand{
   font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13.5px;
   color:#e9ece9; text-decoration:none; white-space:nowrap;
 }
 
-.site-topbar .cats{ display:flex; align-items:center; gap:22px; flex:1 1 auto; }
-.site-topbar .cats > a{
+#site-topbar .cats{ display:flex; align-items:center; gap:22px; flex:1 1 auto; }
+#site-topbar .cats > a{
   font-size:13px; color:#9aa39c; text-decoration:none; white-space:nowrap;
   border-bottom:2px solid transparent; padding-bottom:2px;
 }
-.site-topbar .cats > a:hover{ color:#fff; }
-.site-topbar .cats > a.active{ color:#fff; font-weight:600; border-bottom-color:#39d67f; }
+#site-topbar .cats > a:hover{ color:#fff; }
+#site-topbar .cats > a.active{ color:#fff; font-weight:600; border-bottom-color:#39d67f; }
 
-.site-topbar .topbar-right{ display:flex; align-items:center; gap:16px; }
+#site-topbar .topbar-right{ display:flex; align-items:center; gap:16px; }
 .icon-btn{
   background:none; border:0; color:#9aa39c; font-size:15px; cursor:pointer; line-height:1;
   padding:4px;
@@ -81,8 +81,8 @@
 .theme-switch input:checked + .switch-track .switch-thumb{ transform:translateX(18px); background:#0b0f10; }
 
 @media (max-width:720px){
-  .site-topbar{ gap:14px; padding:10px 14px; flex-wrap:wrap; }
-  .site-topbar .cats{ order:3; width:100%; gap:16px; }
+  #site-topbar{ gap:14px; padding:10px 14px; flex-wrap:wrap; }
+  #site-topbar .cats{ order:3; width:100%; gap:16px; }
   .site-search.open{ width:130px; }
   .site-search .results{ width:220px; right:0; left:auto; }
 }
