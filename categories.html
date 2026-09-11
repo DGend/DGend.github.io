@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Categories — AI 테크트리</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./assets/site-chrome.css">
+<style>
+  :root{
+    --bg:#f7f6f3; --ink:#1f2420; --ink-soft:#565f59; --line:#c9c4ba; --line-soft:#dedad2;
+    --card-bg:#ffffff; --accent:#2f6f5e; --shadow: 0 1px 2px rgba(31,36,32,0.06), 0 1px 1px rgba(31,36,32,0.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14181a; --ink:#e9ece9; --ink-soft:#9fa89f; --line:#3a413c; --line-soft:#2a302b;
+      --card-bg:#1c2224; --accent:#6fbf9f; --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+  }
+  *{box-sizing:border-box;}
+  body{ background:var(--bg); color:var(--ink); margin:0; font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif; }
+  .page{ max-width:960px; margin:0 auto; padding:40px 24px 100px; }
+  h1{ font-size:clamp(24px,4vw,32px); font-weight:700; margin:0 0 8px; }
+  .sub{ color:var(--ink-soft); font-size:13.5px; margin:0; }
+</style>
+</head>
+<body>
+<div id="site-topbar"></div>
+<div class="page">
+  <h1>Categories</h1>
+  <p class="sub">카테고리별로 블럭을 탐색해보세요.</p>
+  <div id="categories-root"></div>
+</div>
+<script src="./assets/nodes-index.js"></script>
+<script src="./assets/site-chrome.js"></script>
+<script src="./assets/categories-page.js"></script>
+</body>
+</html>

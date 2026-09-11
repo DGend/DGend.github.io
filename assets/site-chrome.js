@@ -43,9 +43,16 @@
     });
   }
 
-  function isHomePage(){
+  // which flat nav item (if any) matches the current page, for the active underline
+  function activeNavKey(){
     var path = location.pathname;
-    return path.indexOf('/blocks/') === -1 && path.indexOf('/list.html') === -1;
+    if(path.indexOf('/blocks/') !== -1) return null;
+    if(/categories\.html$/.test(path)) return 'categories';
+    if(/archive\.html$/.test(path)) return 'archive';
+    if(/docs\.html$/.test(path)) return 'docs';
+    if(/series\.html$/.test(path)) return 'series';
+    if(/list\.html$/.test(path)) return null;
+    return 'home';
   }
 
   function wireTheme(){
@@ -72,23 +79,21 @@
     var mount = document.getElementById('site-topbar');
     if(!mount) return;
     var p = prefix();
-    var domains = [
-      ['cv', 'Computer Vision'], ['nlp', 'NLP / LLM'], ['rl', 'Reinforcement Learning'],
-      ['gen', 'Generative / Multi-Modal'], ['robot', 'Robotics / Embodied'],
-      ['safety', 'Alignment & Safety'], ['ts', 'Time Series']
+    var active = activeNavKey();
+    var navItems = [
+      ['home', 'Home', p + 'index.html'],
+      ['categories', 'Categories', p + 'categories.html'],
+      ['archive', 'Archive', p + 'archive.html'],
+      ['docs', 'Docs', p + 'docs.html'],
+      ['series', 'Series', p + 'series.html'],
     ];
-    var catLinks = domains.map(function(d){
-      return '<a href="' + p + 'index.html?domain=' + d[0] + '">' + d[1] + '</a>';
-    }).join('') + '<a href="' + p + 'index.html">전체 테크트리</a>';
+    var navLinks = navItems.map(function(it){
+      return '<a class="' + (active === it[0] ? 'active' : '') + '" href="' + it[2] + '">' + it[1] + '</a>';
+    }).join('');
 
     mount.innerHTML =
-      '<a class="brand' + (isHomePage() ? ' active' : '') + '" href="' + p + 'index.html">AI 테크트리</a>' +
-      '<nav class="cats">' +
-        '<div class="dropdown" id="cat-dropdown">' +
-          '<button type="button" class="dropdown-toggle">Categories</button>' +
-          '<div class="dropdown-menu">' + catLinks + '</div>' +
-        '</div>' +
-      '</nav>' +
+      '<a class="brand" href="' + p + 'index.html">AI 테크트리</a>' +
+      '<nav class="cats">' + navLinks + '</nav>' +
       '<div class="topbar-right">' +
         '<button type="button" class="icon-btn" id="site-search-toggle" aria-label="검색">&#128269;</button>' +
         '<div class="site-search" id="site-search">' +
@@ -112,15 +117,6 @@
       var box = document.getElementById('site-search');
       box.classList.toggle('open');
       if(box.classList.contains('open')) document.getElementById('site-search-input').focus();
-    });
-
-    var catDropdown = document.getElementById('cat-dropdown');
-    catDropdown.querySelector('.dropdown-toggle').addEventListener('click', function(e){
-      e.stopPropagation();
-      catDropdown.classList.toggle('open');
-    });
-    document.addEventListener('click', function(e){
-      if(!catDropdown.contains(e.target)) catDropdown.classList.remove('open');
     });
 
     wireTheme();
