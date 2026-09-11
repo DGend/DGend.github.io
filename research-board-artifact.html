@@ -1,0 +1,591 @@
+<!--
+  Source for the "Paper Trail" research board — published as a private
+  Claude Artifact (db capability), NOT part of this static site's deploy.
+  Live URL: https://claude.ai/code/artifact/f706ce5c-b82d-4bba-8cac-81bb9667a988
+  To update: edit this file, then republish via the Artifact tool with
+  url=<the URL above> so it updates in place instead of creating a new one.
+-->
+<title>Paper Trail</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#0d1210; --panel:#141b18; --panel-2:#181f1c; --ink:#eef2ef; --ink-soft:#8ea89a;
+    --ink-faint:#4d5e57; --line:#26332d; --line-soft:#1c2622;
+    --paper:#5aa7e0; --finding:#b98ee0; --success:#39d67f; --fail:#e2584f; --neutral:#8ea89a;
+    --shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); overflow:hidden;
+    font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
+  }
+  .mono{ font-family:'IBM Plex Mono',ui-monospace,monospace; }
+
+  /* faint dot-grid corkboard ground */
+  #board-viewport{
+    position:fixed; inset:0; overflow:hidden; touch-action:none; cursor:grab;
+    background-color:var(--bg);
+    background-image:radial-gradient(var(--line) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  #board-viewport.panning{ cursor:grabbing; }
+  #board-viewport.connecting{ cursor:crosshair; }
+
+  #board-world{
+    position:absolute; left:0; top:0; width:0; height:0;
+    transform-origin:0 0;
+    will-change:transform;
+  }
+
+  svg#board-edges{ position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
+  svg#board-edges path.edge{ fill:none; stroke:var(--ink-faint); stroke-width:1.6; }
+  svg#board-edges path.edge-ghost{ fill:none; stroke:var(--paper); stroke-width:1.6; stroke-dasharray:4 4; }
+  svg#board-edges text.edge-label{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; fill:var(--ink-soft);
+  }
+  svg#board-edges text.edge-label-bg{ fill:var(--bg); stroke:var(--bg); stroke-width:4; }
+
+  .board-node{
+    position:absolute; width:240px; background:var(--panel); border:1px solid var(--line);
+    border-left-width:3px; border-radius:8px; padding:12px 14px 11px; box-shadow:var(--shadow);
+    cursor:grab; user-select:none;
+  }
+  .board-node.dragging{ cursor:grabbing; box-shadow:0 14px 32px rgba(0,0,0,.5); z-index:5; }
+  .board-node.connect-source{ outline:2px solid var(--paper); outline-offset:2px; }
+  .board-node[data-kind="paper"]{ border-left-color:var(--paper); }
+  .board-node[data-kind="finding"]{ border-left-color:var(--finding); }
+  .board-node[data-kind="experiment"][data-status="success"]{ border-left-color:var(--success); }
+  .board-node[data-kind="experiment"][data-status="failed"]{ border-left-color:var(--fail); }
+  .board-node[data-kind="experiment"][data-status="info"],
+  .board-node[data-kind="experiment"][data-status="neutral"]{ border-left-color:var(--neutral); }
+
+  .board-node .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-soft); margin:0 0 6px; display:flex; align-items:center; gap:6px;
+  }
+  .board-node[data-kind="paper"] .eyebrow{ color:var(--paper); }
+  .board-node[data-kind="finding"] .eyebrow{ color:var(--finding); }
+  .board-node[data-kind="experiment"][data-status="success"] .eyebrow{ color:var(--success); }
+  .board-node[data-kind="experiment"][data-status="failed"] .eyebrow{ color:var(--fail); }
+  .board-node h4{ margin:0 0 6px; font-size:13.5px; font-weight:600; line-height:1.35; }
+  .board-node p{ margin:0; font-size:12px; line-height:1.55; color:var(--ink-soft); }
+  .board-node .meta{
+    margin-top:8px; padding-top:8px; border-top:1px solid var(--line-soft);
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-faint);
+    display:flex; justify-content:space-between; gap:8px;
+  }
+  .board-node .meta a{ color:var(--paper); text-decoration:none; }
+  .board-node .meta a:hover{ text-decoration:underline; }
+  .board-node .del{
+    position:absolute; top:6px; right:6px; width:18px; height:18px; border-radius:5px;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--ink-faint);
+    font-size:11px; line-height:1; cursor:pointer; display:none; align-items:center; justify-content:center;
+  }
+  .board-node:hover .del{ display:flex; }
+  .board-node .del:hover{ color:var(--fail); border-color:var(--fail); }
+
+  #toolbar{
+    position:fixed; top:16px; left:16px; right:16px; z-index:20;
+    display:flex; align-items:center; gap:14px; pointer-events:none;
+  }
+  #toolbar > *{ pointer-events:auto; }
+  #brand{ display:flex; flex-direction:column; gap:1px; margin-right:auto; }
+  #brand .name{ font-size:14px; font-weight:700; }
+  #brand .tag{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); }
+  .tbtn{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink);
+    background:var(--panel); border:1px solid var(--line); border-radius:7px; padding:7px 12px;
+    cursor:pointer; display:flex; align-items:center; gap:6px; box-shadow:var(--shadow);
+  }
+  .tbtn:hover{ border-color:var(--paper); }
+  .tbtn.active{ border-color:var(--paper); color:var(--paper); background:var(--panel-2); }
+  .zoomgrp{ display:flex; border:1px solid var(--line); border-radius:7px; overflow:hidden; box-shadow:var(--shadow); }
+  .zoomgrp button{
+    font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--ink); background:var(--panel);
+    border:0; padding:7px 11px; cursor:pointer; border-right:1px solid var(--line);
+  }
+  .zoomgrp button:last-child{ border-right:0; }
+  .zoomgrp button:hover{ background:var(--panel-2); }
+
+  #legend{
+    position:fixed; left:16px; bottom:16px; z-index:20; display:flex; gap:14px;
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
+    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 12px;
+    box-shadow:var(--shadow);
+  }
+  #legend span{ display:inline-flex; align-items:center; gap:5px; }
+  #legend i{ width:8px; height:8px; border-radius:2px; display:inline-block; }
+
+  #connect-hint{
+    position:fixed; left:50%; top:16px; transform:translateX(-50%); z-index:21;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--paper);
+    background:var(--panel); border:1px solid var(--paper); border-radius:7px; padding:7px 14px;
+    box-shadow:var(--shadow); display:none;
+  }
+  #connect-hint.show{ display:block; }
+
+  #empty-state{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    z-index:5; pointer-events:none; text-align:center; padding-inline:16px;
+  }
+  #empty-state .box{ max-width:46ch; }
+  #empty-state .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--paper); margin:0 0 10px;
+  }
+  #empty-state h2{ margin:0 0 10px; font-size:19px; }
+  #empty-state p{ margin:0; font-size:13px; line-height:1.7; color:var(--ink-soft); }
+  #empty-state.hide{ display:none; }
+
+  /* new-node popover */
+  #composer{
+    position:fixed; z-index:30; width:280px; background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; padding:14px; box-shadow:var(--shadow); display:none;
+  }
+  #composer.show{ display:block; }
+  #composer label{
+    display:block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-soft); margin:10px 0 5px;
+  }
+  #composer label:first-of-type{ margin-top:0; }
+  #composer input[type=text], #composer textarea, #composer select{
+    width:100%; box-sizing:border-box; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:6px; color:var(--ink); font-family:inherit; font-size:12.5px; padding:7px 9px;
+  }
+  #composer textarea{ resize:vertical; min-height:52px; }
+  #composer .row{ display:flex; gap:8px; }
+  #composer .row > *{ flex:1; }
+  #composer .actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+  #composer .actions button{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; border-radius:6px; padding:7px 12px; cursor:pointer;
+  }
+  #composer .cancel{ background:var(--panel-2); color:var(--ink-soft); border:1px solid var(--line); }
+  #composer .save{ background:var(--paper); color:#08131c; border:1px solid var(--paper); font-weight:600; }
+
+  @media (max-width:640px){
+    #toolbar{ flex-wrap:wrap; }
+    .board-node{ width:200px; }
+    #legend{ flex-wrap:wrap; max-width:calc(100vw - 32px); }
+  }
+</style>
+
+<div id="board-viewport">
+  <div id="board-world">
+    <svg id="board-edges"></svg>
+  </div>
+</div>
+
+<div id="empty-state">
+  <div class="box">
+    <p class="eyebrow">// paper trail</p>
+    <h2>아직 노드가 없습니다</h2>
+    <p>
+      Claude와의 대화에서 "이 논문 여기 추가해줘"라고 말하면 노트가 이 보드에 바로 올라옵니다.
+      직접 빠른 메모를 남기려면 오른쪽 위 "+ 노드" 버튼을 쓰세요. 배경을 드래그해 이동, 휠로 확대/축소할 수 있습니다.
+    </p>
+  </div>
+</div>
+
+<div id="connect-hint">연결할 두 번째 노드를 클릭하세요 (Esc로 취소)</div>
+
+<div id="toolbar">
+  <div id="brand">
+    <span class="name">Paper Trail</span>
+    <span class="tag mono">// research board</span>
+  </div>
+  <button type="button" class="tbtn" id="btn-add">＋ 노드</button>
+  <button type="button" class="tbtn" id="btn-connect">🔗 연결</button>
+  <div class="zoomgrp">
+    <button type="button" id="btn-zoom-out">－</button>
+    <button type="button" id="btn-zoom-reset">100%</button>
+    <button type="button" id="btn-zoom-in">＋</button>
+  </div>
+</div>
+
+<div id="legend">
+  <span><i style="background:var(--paper)"></i>Paper</span>
+  <span><i style="background:var(--finding)"></i>Finding</span>
+  <span><i style="background:var(--success)"></i>Experiment · Success</span>
+  <span><i style="background:var(--fail)"></i>Experiment · Failed</span>
+</div>
+
+<div id="composer">
+  <label>종류</label>
+  <select id="c-kind">
+    <option value="finding">Finding (비교/발견)</option>
+    <option value="paper">Paper (논문 메모)</option>
+    <option value="experiment">Experiment (실험 결과)</option>
+  </select>
+  <label>제목</label>
+  <input type="text" id="c-title" placeholder="짧은 제목">
+  <label>내용</label>
+  <textarea id="c-text" placeholder="핵심 내용 2~3문장"></textarea>
+  <div id="c-extra-experiment" style="display:none;">
+    <label>결과</label>
+    <select id="c-status">
+      <option value="success">성공</option>
+      <option value="failed">실패</option>
+      <option value="info">진행중/정보</option>
+    </select>
+  </div>
+  <div id="c-extra-paper" style="display:none;">
+    <div class="row">
+      <div><label>저자</label><input type="text" id="c-authors" placeholder="Authors"></div>
+      <div><label>연도</label><input type="text" id="c-year" placeholder="2026"></div>
+    </div>
+    <label>Notion 링크</label>
+    <input type="text" id="c-url" placeholder="https://notion.so/...">
+  </div>
+  <div class="actions">
+    <button type="button" class="cancel" id="c-cancel">취소</button>
+    <button type="button" class="save" id="c-save">추가</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var viewport = document.getElementById('board-viewport');
+  var world = document.getElementById('board-world');
+  var svg = document.getElementById('board-edges');
+  var emptyState = document.getElementById('empty-state');
+
+  var tx = 0, ty = 0, scale = 1;
+  var nodes = {}; // id -> data
+  var edges = {}; // id -> data
+  var nodeEls = {}; // id -> div
+
+  function applyTransform(){
+    world.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+  }
+
+  // ---- screen <-> board space ----
+  function toBoard(clientX, clientY){
+    var r = viewport.getBoundingClientRect();
+    return { x: (clientX - r.left - tx) / scale, y: (clientY - r.top - ty) / scale };
+  }
+
+  // ---- pan ----
+  var panning = false, panStartX = 0, panStartY = 0, panTx0 = 0, panTy0 = 0;
+  viewport.addEventListener('pointerdown', function(e){
+    if(e.target.closest('.board-node')) return;
+    if(connectMode) { cancelConnect(); return; }
+    panning = true;
+    viewport.classList.add('panning');
+    panStartX = e.clientX; panStartY = e.clientY; panTx0 = tx; panTy0 = ty;
+    viewport.setPointerCapture(e.pointerId);
+  });
+  viewport.addEventListener('pointermove', function(e){
+    if(panning){
+      tx = panTx0 + (e.clientX - panStartX);
+      ty = panTy0 + (e.clientY - panStartY);
+      applyTransform();
+    }
+    if(connectMode && pendingSource){ drawGhostEdge(e.clientX, e.clientY); }
+  });
+  viewport.addEventListener('pointerup', function(e){
+    if(panning){ panning = false; viewport.classList.remove('panning'); }
+  });
+
+  // ---- zoom ----
+  function setScale(next){
+    scale = Math.max(0.3, Math.min(2.5, next));
+    applyTransform();
+  }
+  viewport.addEventListener('wheel', function(e){
+    e.preventDefault();
+    setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
+  }, { passive:false });
+  document.getElementById('btn-zoom-in').addEventListener('click', function(){ setScale(scale * 1.2); });
+  document.getElementById('btn-zoom-out').addEventListener('click', function(){ setScale(scale / 1.2); });
+  document.getElementById('btn-zoom-reset').addEventListener('click', function(){ scale = 1; tx = 0; ty = 0; applyTransform(); });
+
+  // ---- connect mode ----
+  var connectMode = false, pendingSource = null;
+  var connectBtn = document.getElementById('btn-connect');
+  var connectHint = document.getElementById('connect-hint');
+  var ghostPath = null;
+
+  function setConnectMode(on){
+    connectMode = on;
+    connectBtn.classList.toggle('active', on);
+    viewport.classList.toggle('connecting', on);
+    connectHint.classList.toggle('show', on);
+    if(!on) cancelConnect();
+  }
+  connectBtn.addEventListener('click', function(){ setConnectMode(!connectMode); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ if(pendingSource) cancelConnect(); else setConnectMode(false); }
+  });
+
+  function cancelConnect(){
+    pendingSource = null;
+    Object.keys(nodeEls).forEach(function(id){ nodeEls[id].classList.remove('connect-source'); });
+    if(ghostPath){ ghostPath.remove(); ghostPath = null; }
+  }
+
+  function drawGhostEdge(clientX, clientY){
+    var a = nodeEls[pendingSource];
+    if(!a) return;
+    var start = centerOf(a);
+    var p = toBoard(clientX, clientY);
+    if(!ghostPath){
+      ghostPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+      ghostPath.setAttribute('class','edge-ghost');
+      svg.appendChild(ghostPath);
+    }
+    ghostPath.setAttribute('d', 'M ' + start.x + ' ' + start.y + ' L ' + p.x + ' ' + p.y);
+  }
+
+  // ---- geometry helpers ----
+  function centerOf(el){
+    return { x: parseFloat(el.style.left) + el.offsetWidth/2, y: parseFloat(el.style.top) + el.offsetHeight/2 };
+  }
+  function edgePoint(el, towardX, towardY){
+    var c = centerOf(el), hw = el.offsetWidth/2, hh = el.offsetHeight/2;
+    var dx = towardX - c.x, dy = towardY - c.y;
+    if(dx === 0 && dy === 0) return c;
+    var scaleX = hw / Math.abs(dx || 1e-6), scaleY = hh / Math.abs(dy || 1e-6);
+    var s = Math.min(scaleX, scaleY);
+    return { x: c.x + dx * s, y: c.y + dy * s };
+  }
+
+  // ---- rendering ----
+  function kindLabel(n){
+    if(n.kind === 'experiment') return 'EXPERIMENT · ' + (n.status === 'success' ? 'SUCCESS' : n.status === 'failed' ? 'FAILED' : 'INFO');
+    return n.kind === 'paper' ? 'PAPER' : 'FINDING';
+  }
+
+  function renderNode(id, n){
+    var el = nodeEls[id];
+    if(!el){
+      el = document.createElement('div');
+      el.className = 'board-node';
+      el.dataset.id = id;
+      el.innerHTML =
+        '<button type="button" class="del" title="삭제">×</button>' +
+        '<p class="eyebrow"></p><h4></h4><p class="body"></p>' +
+        '<div class="meta" style="display:none;"></div>';
+      world.appendChild(el);
+      nodeEls[id] = el;
+      wireNodeEvents(el);
+    }
+    el.dataset.kind = n.kind;
+    el.dataset.status = n.status || 'info';
+    el.style.left = (n.x || 0) + 'px';
+    el.style.top = (n.y || 0) + 'px';
+    el.querySelector('.eyebrow').textContent = kindLabel(n);
+    el.querySelector('h4').textContent = n.title || '(제목 없음)';
+    el.querySelector('.body').textContent = n.text || '';
+    var meta = el.querySelector('.meta');
+    if(n.kind === 'paper' && (n.authors || n.year || n.notionUrl)){
+      meta.style.display = 'flex';
+      meta.innerHTML =
+        '<span>' + [n.authors, n.year].filter(Boolean).join(' · ') + '</span>' +
+        (n.notionUrl ? '<a href="' + n.notionUrl + '" target="_blank" rel="noopener">Notion &#8599;</a>' : '');
+    } else if(n.kind === 'experiment' && n.metric){
+      meta.style.display = 'flex';
+      meta.innerHTML = '<span>' + n.metric + '</span><span></span>';
+    } else {
+      meta.style.display = 'none';
+    }
+  }
+
+  function removeNodeEl(id){
+    if(nodeEls[id]){ nodeEls[id].remove(); delete nodeEls[id]; }
+  }
+
+  function redrawEdges(){
+    Array.prototype.slice.call(svg.querySelectorAll('path.edge, text.edge-label, text.edge-label-bg')).forEach(function(el){ el.remove(); });
+    Object.keys(edges).forEach(function(id){
+      var e = edges[id];
+      var a = nodeEls[e.from], b = nodeEls[e.to];
+      if(!a || !b) return;
+      var ca = centerOf(a), cb = centerOf(b);
+      var p1 = edgePoint(a, cb.x, cb.y), p2 = edgePoint(b, ca.x, ca.y);
+      var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('class','edge');
+      path.setAttribute('d', 'M ' + p1.x + ' ' + p1.y + ' L ' + p2.x + ' ' + p2.y);
+      path.dataset.id = id;
+      svg.appendChild(path);
+      if(e.label){
+        var mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+        var bg = document.createElementNS('http://www.w3.org/2000/svg','text');
+        bg.setAttribute('class','edge-label-bg'); bg.setAttribute('x', mx); bg.setAttribute('y', my);
+        bg.textContent = e.label;
+        var fg = document.createElementNS('http://www.w3.org/2000/svg','text');
+        fg.setAttribute('class','edge-label'); fg.setAttribute('x', mx); fg.setAttribute('y', my);
+        fg.textContent = e.label;
+        svg.appendChild(bg); svg.appendChild(fg);
+      }
+    });
+  }
+
+  function renderAll(){
+    Object.keys(nodes).forEach(function(id){ renderNode(id, nodes[id]); });
+    redrawEdges();
+    emptyState.classList.toggle('hide', Object.keys(nodes).length > 0);
+  }
+
+  // ---- node drag + delete + connect-click ----
+  function wireNodeEvents(el){
+    var dragging = false, sx = 0, sy = 0, x0 = 0, y0 = 0;
+    el.addEventListener('pointerdown', function(e){
+      if(e.target.closest('.del')) return;
+      var id = el.dataset.id;
+      if(connectMode){
+        e.stopPropagation();
+        if(!pendingSource){
+          pendingSource = id;
+          el.classList.add('connect-source');
+        } else if(pendingSource !== id){
+          createEdge(pendingSource, id);
+          cancelConnect();
+        }
+        return;
+      }
+      dragging = true;
+      el.classList.add('dragging');
+      sx = e.clientX; sy = e.clientY;
+      x0 = parseFloat(el.style.left); y0 = parseFloat(el.style.top);
+      el.setPointerCapture(e.pointerId);
+      e.stopPropagation();
+    });
+    el.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      var dx = (e.clientX - sx) / scale, dy = (e.clientY - sy) / scale;
+      el.style.left = (x0 + dx) + 'px';
+      el.style.top = (y0 + dy) + 'px';
+      redrawEdges();
+    });
+    el.addEventListener('pointerup', function(e){
+      if(!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      var id = el.dataset.id;
+      var x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+      nodes[id] = Object.assign({}, nodes[id], { x: x, y: y });
+      persistNodePosition(id, x, y);
+    });
+    el.querySelector('.del').addEventListener('click', function(e){
+      e.stopPropagation();
+      deleteNode(el.dataset.id);
+    });
+  }
+
+  // ---- db wiring ----
+  var db = null;
+  var nodesCol = null, edgesCol = null;
+
+  function persistNodePosition(id, x, y){
+    if(!nodesCol) return;
+    nodesCol.doc(id).update({ x: x, y: y }).catch(function(){});
+  }
+
+  function createEdge(from, to){
+    var id = 'e-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
+    var data = { from: from, to: to, label: '' };
+    edges[id] = data;
+    redrawEdges();
+    if(edgesCol) edgesCol.doc(id).set(data).catch(function(){});
+  }
+
+  function deleteNode(id){
+    delete nodes[id];
+    removeNodeEl(id);
+    Object.keys(edges).forEach(function(eid){
+      if(edges[eid].from === id || edges[eid].to === id){
+        delete edges[eid];
+        if(edgesCol) edgesCol.doc(eid).delete().catch(function(){});
+      }
+    });
+    redrawEdges();
+    emptyState.classList.toggle('hide', Object.keys(nodes).length > 0);
+    if(nodesCol) nodesCol.doc(id).delete().catch(function(){});
+  }
+
+  function addNodeFromComposer(data){
+    var id = 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
+    var vp = viewport.getBoundingClientRect();
+    var center = toBoard(vp.left + vp.width/2, vp.top + vp.height/2);
+    data.x = center.x - 120; data.y = center.y - 40;
+    nodes[id] = data;
+    renderNode(id, data);
+    emptyState.classList.add('hide');
+    if(nodesCol) nodesCol.doc(id).set(data).catch(function(){});
+  }
+
+  async function initDb(){
+    try {
+      db = await window.claude.use('db');
+    } catch(e) { db = null; }
+    if(!db) return; // no persistence available in this view; board still works in-memory
+    nodesCol = db.collection('nodes');
+    edgesCol = db.collection('edges');
+    nodesCol.onSnapshot(function(snap){
+      var seen = {};
+      snap.docs.forEach(function(d){
+        seen[d.id] = true;
+        var data = d.data();
+        var local = nodeEls[d.id];
+        // don't clobber a node the local user is actively dragging
+        if(local && local.classList.contains('dragging')) return;
+        nodes[d.id] = data;
+        renderNode(d.id, data);
+      });
+      Object.keys(nodeEls).forEach(function(id){ if(!seen[id]) { delete nodes[id]; removeNodeEl(id); } });
+      redrawEdges();
+      emptyState.classList.toggle('hide', Object.keys(nodes).length > 0);
+    }, function(){ /* degrade silently: board stays usable in-memory */ });
+    edgesCol.onSnapshot(function(snap){
+      edges = {};
+      snap.docs.forEach(function(d){ edges[d.id] = d.data(); });
+      redrawEdges();
+    }, function(){});
+  }
+
+  // ---- composer (quick add) ----
+  var composer = document.getElementById('composer');
+  var cKind = document.getElementById('c-kind');
+  var cTitle = document.getElementById('c-title');
+  var cText = document.getElementById('c-text');
+  var cStatus = document.getElementById('c-status');
+  var cAuthors = document.getElementById('c-authors');
+  var cYear = document.getElementById('c-year');
+  var cUrl = document.getElementById('c-url');
+
+  function updateComposerFields(){
+    document.getElementById('c-extra-experiment').style.display = cKind.value === 'experiment' ? 'block' : 'none';
+    document.getElementById('c-extra-paper').style.display = cKind.value === 'paper' ? 'block' : 'none';
+  }
+  cKind.addEventListener('change', updateComposerFields);
+
+  document.getElementById('btn-add').addEventListener('click', function(){
+    composer.classList.add('show');
+    composer.style.left = '16px';
+    composer.style.top = '64px';
+    cTitle.focus();
+  });
+  document.getElementById('c-cancel').addEventListener('click', function(){
+    composer.classList.remove('show');
+    cTitle.value = ''; cText.value = ''; cAuthors.value = ''; cYear.value = ''; cUrl.value = '';
+  });
+  document.getElementById('c-save').addEventListener('click', function(){
+    if(!cTitle.value.trim()) { cTitle.focus(); return; }
+    var data = { kind: cKind.value, title: cTitle.value.trim(), text: cText.value.trim() };
+    if(cKind.value === 'experiment') data.status = cStatus.value;
+    else data.status = 'info';
+    if(cKind.value === 'paper'){
+      if(cAuthors.value.trim()) data.authors = cAuthors.value.trim();
+      if(cYear.value.trim()) data.year = cYear.value.trim();
+      if(cUrl.value.trim()) data.notionUrl = cUrl.value.trim();
+    }
+    addNodeFromComposer(data);
+    document.getElementById('c-cancel').click();
+  });
+  updateComposerFields();
+
+  applyTransform();
+  initDb();
+})();
+</script>

@@ -90,9 +90,13 @@
       ['archive', 'Archive', p + 'archive.html'],
       ['docs', 'Docs', p + 'docs.html'],
       ['series', 'Series', p + 'series.html'],
+      // private (db-capability) artifact, not part of this static site — opens
+      // in a new tab; access is gated by the artifact itself, not by this link
+      ['research', 'Research', 'https://claude.ai/code/artifact/f706ce5c-b82d-4bba-8cac-81bb9667a988', true],
     ];
     var navLinks = navItems.map(function(it){
-      return '<a class="' + (active === it[0] ? 'active' : '') + '" href="' + it[2] + '">' + it[1] + '</a>';
+      var extAttrs = it[3] ? ' target="_blank" rel="noopener"' : '';
+      return '<a class="' + (active === it[0] ? 'active' : '') + '" href="' + it[2] + '"' + extAttrs + '>' + it[1] + '</a>';
     }).join('');
 
     mount.innerHTML =
