@@ -122,15 +122,23 @@
       el.addEventListener('mouseenter', function(){ setActive(id); });
       el.addEventListener('mouseleave', function(){ setActive(null); });
     });
+    // Scrolls .rc-cards horizontally so `card` sits centered in the visible
+    // strip. Done via scrollLeft math (not scrollIntoView) so it can never
+    // bubble into the page's own vertical scroll — only this row moves.
+    function centerCardInStrip(id){
+      var card = root.querySelector('.rc-card[data-id="' + id + '"]');
+      var strip = root.querySelector('.rc-cards');
+      if(!card || !strip) return;
+      var target = card.offsetLeft - (strip.clientWidth - card.offsetWidth) / 2;
+      strip.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+    }
+
     root.querySelectorAll('.rc-node').forEach(function(el){
       el.addEventListener('click', function(){
         var id = el.getAttribute('data-id');
         pinned = pinned === id ? null : id;
         setActive(pinned);
-        if(pinned){
-          var card = root.querySelector('.rc-card[data-id="' + pinned + '"]');
-          if(card) card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        }
+        if(pinned) centerCardInStrip(pinned);
       });
     });
   }
