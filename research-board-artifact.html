@@ -21,164 +21,156 @@
     font-family:'IBM Plex Sans KR','Pretendard',-apple-system,sans-serif;
   }
   .mono{ font-family:'IBM Plex Mono',ui-monospace,monospace; }
+  a{ color:inherit; }
 
-  /* faint dot-grid corkboard ground */
-  #board-viewport{
-    position:fixed; inset:0; overflow:hidden; touch-action:none; cursor:grab;
-    background-color:var(--bg);
-    background-image:radial-gradient(var(--line) 1px, transparent 1px);
-    background-size:28px 28px;
+  #app{ display:flex; height:100vh; }
+
+  /* ---- left: search + filter + tree ---- */
+  #sidebar{
+    width:320px; flex:none; height:100%; overflow-y:auto; background:var(--panel);
+    border-right:1px solid var(--line); padding:18px 16px 40px; display:flex; flex-direction:column; gap:16px;
   }
-  #board-viewport.panning{ cursor:grabbing; }
-  #board-viewport.connecting{ cursor:crosshair; }
-
-  #board-world{
-    position:absolute; left:0; top:0; width:0; height:0;
-    transform-origin:0 0;
-    will-change:transform;
+  #sidebar-brand .name{ font-size:15px; font-weight:700; }
+  #sidebar-brand .tag{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); }
+  #sb-search{
+    width:100%; box-sizing:border-box; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:7px; color:var(--ink); font-family:'IBM Plex Sans KR',sans-serif; font-size:12.5px;
+    padding:8px 10px;
   }
+  #sb-search::placeholder{ color:var(--ink-faint); }
 
-  svg#board-edges{ position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
-  svg#board-edges path.edge{ fill:none; stroke:var(--ink-faint); stroke-width:1.6; }
-  svg#board-edges path.edge-ghost{ fill:none; stroke:var(--paper); stroke-width:1.6; stroke-dasharray:4 4; }
-  svg#board-edges text.edge-label{
-    font-family:'IBM Plex Mono',monospace; font-size:10.5px; fill:var(--ink-soft);
-  }
-  svg#board-edges text.edge-label-bg{ fill:var(--bg); stroke:var(--bg); stroke-width:4; }
-
-  .board-node{
-    position:absolute; width:240px; background:var(--panel); border:1px solid var(--line);
-    border-left-width:3px; border-radius:8px; padding:12px 14px 11px; box-shadow:var(--shadow);
-    cursor:grab; user-select:none;
-  }
-  .board-node.dragging{ cursor:grabbing; box-shadow:0 14px 32px rgba(0,0,0,.5); z-index:5; }
-  .board-node.connect-source{ outline:2px solid var(--paper); outline-offset:2px; }
-  .board-node.collapsed{ display:none; }
-  .board-node.focus-center{ outline:2px solid var(--success); outline-offset:2px; }
-  .board-node[data-kind="paper"]{ border-left-color:var(--paper); }
-  .board-node[data-kind="finding"]{ border-left-color:var(--finding); }
-  .board-node[data-kind="experiment"][data-status="success"]{ border-left-color:var(--success); }
-  .board-node[data-kind="experiment"][data-status="failed"]{ border-left-color:var(--fail); }
-  .board-node[data-kind="experiment"][data-status="info"],
-  .board-node[data-kind="experiment"][data-status="neutral"]{ border-left-color:var(--neutral); }
-
-  .board-node .eyebrow{
+  .sb-section-label{
     font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--ink-soft); margin:0 0 6px; display:flex; align-items:center; gap:6px;
+    color:var(--ink-faint); margin:0;
   }
-  .board-node[data-kind="paper"] .eyebrow{ color:var(--paper); }
-  .board-node[data-kind="finding"] .eyebrow{ color:var(--finding); }
-  .board-node[data-kind="experiment"][data-status="success"] .eyebrow{ color:var(--success); }
-  .board-node[data-kind="experiment"][data-status="failed"] .eyebrow{ color:var(--fail); }
-  .board-node h4{ margin:0 0 6px; font-size:13.5px; font-weight:600; line-height:1.35; }
-  .board-node p{ margin:0; font-size:12px; line-height:1.55; color:var(--ink-soft); }
-  .board-node .meta{
-    margin-top:8px; padding-top:8px; border-top:1px solid var(--line-soft);
-    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-faint);
-    display:flex; justify-content:space-between; gap:8px;
+  #sb-filters{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
+    background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:4px 10px;
+    cursor:pointer; user-select:none;
   }
-  .board-node .meta a{ color:var(--paper); text-decoration:none; }
-  .board-node .meta a:hover{ text-decoration:underline; }
-  .board-node .del{
-    position:absolute; top:6px; right:6px; width:18px; height:18px; border-radius:5px;
-    border:1px solid var(--line); background:var(--panel-2); color:var(--ink-faint);
-    font-size:11px; line-height:1; cursor:pointer; display:none; align-items:center; justify-content:center;
-  }
-  .board-node:hover .del{ display:flex; }
-  .board-node .del:hover{ color:var(--fail); border-color:var(--fail); }
+  .chip:hover{ border-color:var(--paper); }
+  .chip.on{ border-color:var(--paper); color:var(--paper); background:rgba(90,167,224,.1); }
+  .chip.on[data-v="failed"]{ border-color:var(--fail); color:var(--fail); background:rgba(226,88,79,.1); }
+  .chip.on[data-v="success"]{ border-color:var(--success); color:var(--success); background:rgba(57,214,127,.1); }
 
-  #toolbar{
-    position:fixed; top:16px; left:16px; right:16px; z-index:20;
-    display:flex; align-items:center; gap:14px; pointer-events:none;
+  #sb-tree{ flex:1; display:flex; flex-direction:column; gap:2px; }
+  .sb-bucket-head{
+    display:flex; align-items:center; gap:8px; padding:7px 6px; border-radius:6px; cursor:pointer;
+    font-size:12.5px; font-weight:600;
   }
-  #toolbar > *{ pointer-events:auto; }
-  #brand{ display:flex; flex-direction:column; gap:1px; margin-right:auto; }
-  #brand .name{ font-size:14px; font-weight:700; }
-  #brand .tag{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); }
+  .sb-bucket-head:hover{ background:var(--panel-2); }
+  .sb-bucket-head.current{ color:var(--paper); }
+  .sb-bucket-head .car{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-faint); width:10px; }
+  .sb-bucket-head .cnt{ margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-faint); }
+  .sb-items{ display:flex; flex-direction:column; gap:1px; padding-left:18px; }
+  .sb-item{
+    display:flex; align-items:center; gap:7px; padding:6px 6px; border-radius:5px; cursor:pointer;
+    font-size:12px; color:var(--ink-soft);
+  }
+  .sb-item:hover{ background:var(--panel-2); color:var(--ink); }
+  .sb-item.current{ color:var(--paper); background:rgba(90,167,224,.08); }
+  .sb-item .dot{ width:6px; height:6px; border-radius:50%; flex:none; }
+  .sb-item .t{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ---- right: staged drill-down canvas ---- */
+  #main{ flex:1; height:100%; overflow-y:auto; padding:28px 24px 60px; }
+  #breadcrumb{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); margin-bottom:20px;
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+  }
+  #breadcrumb a{ color:var(--ink-soft); text-decoration:none; }
+  #breadcrumb a:hover{ color:var(--paper); }
+  #breadcrumb .cur{ color:var(--ink); }
+  #breadcrumb .sep{ color:var(--ink-faint); }
+
+  #stage{ margin:0 auto; max-width:1100px; transition:max-width .28s ease; }
+  #stage.lv-buckets{ max-width:1100px; }
+  #stage.lv-items{ max-width:820px; }
+  #stage.lv-detail{ max-width:600px; }
+
+  @keyframes stageIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  #stage-inner{ animation:stageIn .22s ease; }
+
+  .btn-row{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
   .tbtn{
     font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink);
     background:var(--panel); border:1px solid var(--line); border-radius:7px; padding:7px 12px;
-    cursor:pointer; display:flex; align-items:center; gap:6px; box-shadow:var(--shadow);
+    cursor:pointer;
   }
   .tbtn:hover{ border-color:var(--paper); }
-  .tbtn.active{ border-color:var(--paper); color:var(--paper); background:var(--panel-2); }
-  .zoomgrp{ display:flex; border:1px solid var(--line); border-radius:7px; overflow:hidden; box-shadow:var(--shadow); }
-  .zoomgrp button{
-    font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--ink); background:var(--panel);
-    border:0; padding:7px 11px; cursor:pointer; border-right:1px solid var(--line);
-  }
-  .zoomgrp button:last-child{ border-right:0; }
-  .zoomgrp button:hover{ background:var(--panel-2); }
 
-  #search-wrap{ position:relative; }
-  #search-input{
-    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink);
-    background:var(--panel); border:1px solid var(--line); border-radius:7px; padding:7px 10px;
-    width:180px; box-shadow:var(--shadow);
+  /* bucket grid (level 0) */
+  .bucket-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
+  .bucket-card{
+    background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--paper);
+    border-radius:10px; padding:18px 18px 16px; cursor:pointer; box-shadow:var(--shadow);
   }
-  #search-input::placeholder{ color:var(--ink-faint); }
-  #search-results{
-    position:absolute; top:calc(100% + 4px); left:0; width:320px; max-height:360px; overflow-y:auto;
-    background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:var(--shadow);
-    display:none; z-index:25;
-  }
-  #search-results.show{ display:block; }
-  #search-results a{
-    display:block; padding:8px 10px; font-size:12px; color:var(--ink); text-decoration:none;
-    border-bottom:1px solid var(--line-soft);
-  }
-  #search-results a:last-child{ border-bottom:0; }
-  #search-results a:hover{ background:var(--panel-2); }
-  #search-results a span{ display:block; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-faint); margin-top:2px; }
-  #search-results .empty{ padding:10px; font-size:11.5px; color:var(--ink-faint); }
+  .bucket-card:hover{ border-color:var(--paper); transform:translateY(-2px); }
+  .bucket-card .name{ font-size:15px; font-weight:700; margin-bottom:6px; }
+  .bucket-card .cnt{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .bucket-card .dots{ display:flex; gap:4px; margin-top:10px; }
+  .bucket-card .dots i{ width:7px; height:7px; border-radius:50%; display:block; }
 
-  #focus-status{
-    position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:20;
-    display:none; align-items:center; gap:10px;
-    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--success);
-    background:var(--panel); border:1px solid var(--success); border-radius:7px; padding:7px 14px;
-    box-shadow:var(--shadow);
+  /* item list (level 1) */
+  .item-list{ display:flex; flex-direction:column; gap:8px; }
+  .item-row{
+    display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line);
+    border-left:3px solid var(--paper); border-radius:8px; padding:12px 14px; cursor:pointer;
   }
-  #focus-status.show{ display:flex; }
-  #focus-status button{
-    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink);
-    background:var(--panel-2); border:1px solid var(--line); border-radius:5px; padding:3px 9px; cursor:pointer;
+  .item-row:hover{ border-color:var(--paper); }
+  .item-row .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:3px;
   }
-  #focus-status button:hover{ border-color:var(--paper); }
+  .item-row .title{ font-size:13.5px; font-weight:600; }
+  .item-row .sub{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-faint); margin-top:3px; }
+  .item-row .chev{ margin-left:auto; color:var(--ink-faint); }
 
-  #legend{
-    position:fixed; left:16px; bottom:16px; z-index:20; display:flex; gap:14px;
-    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
-    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 12px;
-    box-shadow:var(--shadow);
+  /* detail (level 2 / leaf) */
+  .detail-card{
+    background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--paper);
+    border-radius:12px; padding:26px 26px 22px; box-shadow:var(--shadow);
   }
-  #legend span{ display:inline-flex; align-items:center; gap:5px; }
-  #legend i{ width:8px; height:8px; border-radius:2px; display:inline-block; }
+  .detail-card .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    margin:0 0 10px;
+  }
+  .detail-card h2{ margin:0 0 14px; font-size:19px; line-height:1.35; }
+  .detail-card .meta-line{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); margin-bottom:16px;
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+  .detail-card .meta-line a{ color:var(--paper); text-decoration:none; }
+  .detail-card .meta-line a:hover{ text-decoration:underline; }
+  .detail-card .text-box{
+    background:var(--panel-2); border:1px solid var(--line-soft); border-radius:8px; padding:14px 16px;
+    font-size:13px; line-height:1.7; color:var(--ink-soft); margin-bottom:18px; white-space:pre-wrap;
+  }
+  .detail-card .text-box:empty::before{ content:"(아직 요약이 없습니다 — Claude에게 \"이 논문 읽었는데...\"라고 말해주세요)"; font-style:italic; color:var(--ink-faint); }
+  .rel-block{ margin-top:16px; }
+  .rel-block .sb-section-label{ margin-bottom:8px; }
+  .rel-list{ display:flex; flex-direction:column; gap:6px; }
+  .rel-item{
+    display:block; font-size:12.5px; color:var(--ink); background:var(--panel-2); border:1px solid var(--line);
+    border-radius:6px; padding:8px 10px; text-decoration:none; cursor:pointer;
+  }
+  .rel-item:hover{ border-color:var(--paper); }
+  .detail-actions{ display:flex; gap:10px; margin-top:20px; }
+  .detail-actions button{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; border-radius:6px; padding:7px 12px; cursor:pointer;
+  }
+  .btn-del{ background:var(--panel-2); color:var(--fail); border:1px solid var(--line); }
+  .btn-del:hover{ border-color:var(--fail); }
 
-  #connect-hint{
-    position:fixed; left:50%; top:16px; transform:translateX(-50%); z-index:21;
-    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--paper);
-    background:var(--panel); border:1px solid var(--paper); border-radius:7px; padding:7px 14px;
-    box-shadow:var(--shadow); display:none;
-  }
-  #connect-hint.show{ display:block; }
-
-  #empty-state{
-    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-    z-index:5; pointer-events:none; text-align:center; padding-inline:16px;
-  }
-  #empty-state .box{ max-width:46ch; }
-  #empty-state .eyebrow{
-    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--paper); margin:0 0 10px;
-  }
+  #empty-state{ text-align:center; padding:80px 20px; }
+  #empty-state .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--paper); margin:0 0 10px; }
   #empty-state h2{ margin:0 0 10px; font-size:19px; }
-  #empty-state p{ margin:0; font-size:13px; line-height:1.7; color:var(--ink-soft); }
-  #empty-state.hide{ display:none; }
+  #empty-state p{ margin:0 auto; max-width:46ch; font-size:13px; line-height:1.7; color:var(--ink-soft); }
 
-  /* new-node popover */
+  /* composer */
   #composer{
-    position:fixed; z-index:30; width:280px; background:var(--panel); border:1px solid var(--line);
+    position:fixed; z-index:30; width:300px; right:24px; top:24px; background:var(--panel); border:1px solid var(--line);
     border-radius:10px; padding:14px; box-shadow:var(--shadow); display:none;
   }
   #composer.show{ display:block; }
@@ -201,61 +193,36 @@
   #composer .cancel{ background:var(--panel-2); color:var(--ink-soft); border:1px solid var(--line); }
   #composer .save{ background:var(--paper); color:#08131c; border:1px solid var(--paper); font-weight:600; }
 
-  @media (max-width:640px){
-    #toolbar{ flex-wrap:wrap; }
-    .board-node{ width:200px; }
-    #legend{ flex-wrap:wrap; max-width:calc(100vw - 32px); }
+  @media (max-width:760px){
+    #sidebar{ width:240px; }
+    #composer{ width:calc(100vw - 48px); right:24px; }
   }
 </style>
 
-<div id="board-viewport">
-  <div id="board-world">
-    <svg id="board-edges"></svg>
+<div id="app">
+  <div id="sidebar">
+    <div id="sidebar-brand">
+      <div class="name">Paper Trail</div>
+      <div class="tag mono">// search &amp; filter</div>
+    </div>
+    <input type="text" id="sb-search" placeholder="제목·저자 검색...">
+    <div>
+      <p class="sb-section-label">Kind</p>
+      <div id="sb-filters" style="margin-top:8px;"></div>
+    </div>
+    <div style="flex:1; min-height:0; display:flex; flex-direction:column;">
+      <p class="sb-section-label" style="margin-bottom:6px;">Browse</p>
+      <div id="sb-tree" style="overflow-y:auto;"></div>
+    </div>
   </div>
-</div>
 
-<div id="empty-state">
-  <div class="box">
-    <p class="eyebrow">// paper trail</p>
-    <h2>아직 노드가 없습니다</h2>
-    <p>
-      Claude와의 대화에서 "이 논문 여기 추가해줘"라고 말하면 노트가 이 보드에 바로 올라옵니다.
-      직접 빠른 메모를 남기려면 오른쪽 위 "+ 노드" 버튼을 쓰세요. 배경을 드래그해 이동, 휠로 확대/축소할 수 있습니다.
-      노드를 클릭하면 직접 연결된 노드만 남기고 나머지는 접어둡니다(다시 클릭하면 해제).
-    </p>
+  <div id="main">
+    <div id="breadcrumb"></div>
+    <div class="btn-row">
+      <button type="button" class="tbtn" id="btn-add">＋ 노드</button>
+    </div>
+    <div id="stage" class="lv-buckets"><div id="stage-inner"></div></div>
   </div>
-</div>
-
-<div id="connect-hint">연결할 두 번째 노드를 클릭하세요 (Esc로 취소)</div>
-
-<div id="toolbar">
-  <div id="brand">
-    <span class="name">Paper Trail</span>
-    <span class="tag mono">// research board</span>
-  </div>
-  <div id="search-wrap">
-    <input type="text" id="search-input" placeholder="노드 검색..." autocomplete="off">
-    <div id="search-results"></div>
-  </div>
-  <button type="button" class="tbtn" id="btn-add">＋ 노드</button>
-  <button type="button" class="tbtn" id="btn-connect">🔗 연결</button>
-  <div class="zoomgrp">
-    <button type="button" id="btn-zoom-out">－</button>
-    <button type="button" id="btn-zoom-reset">100%</button>
-    <button type="button" id="btn-zoom-in">＋</button>
-  </div>
-</div>
-
-<div id="focus-status">
-  <span id="focus-status-text"></span>
-  <button type="button" id="btn-focus-exit">전체 보기 ↩</button>
-</div>
-
-<div id="legend">
-  <span><i style="background:var(--paper)"></i>Paper</span>
-  <span><i style="background:var(--finding)"></i>Finding</span>
-  <span><i style="background:var(--success)"></i>Experiment · Success</span>
-  <span><i style="background:var(--fail)"></i>Experiment · Failed</span>
 </div>
 
 <div id="composer">
@@ -265,6 +232,10 @@
     <option value="paper">Paper (논문 메모)</option>
     <option value="experiment">Experiment (실험 결과)</option>
   </select>
+  <div id="c-extra-paper" style="display:none;">
+    <label>카테고리</label>
+    <select id="c-category"></select>
+  </div>
   <label>제목</label>
   <input type="text" id="c-title" placeholder="짧은 제목">
   <label>내용</label>
@@ -277,7 +248,7 @@
       <option value="info">진행중/정보</option>
     </select>
   </div>
-  <div id="c-extra-paper" style="display:none;">
+  <div id="c-extra-paper2" style="display:none;">
     <div class="row">
       <div><label>저자</label><input type="text" id="c-authors" placeholder="Authors"></div>
       <div><label>연도</label><input type="text" id="c-year" placeholder="2026"></div>
@@ -293,407 +264,328 @@
 
 <script>
 (function(){
-  var viewport = document.getElementById('board-viewport');
-  var world = document.getElementById('board-world');
-  var svg = document.getElementById('board-edges');
-  var emptyState = document.getElementById('empty-state');
+  var KIND_COLOR = { paper:'var(--paper)', finding:'var(--finding)', experiment_success:'var(--success)', experiment_failed:'var(--fail)', experiment_info:'var(--neutral)' };
 
-  var tx = 0, ty = 0, scale = 1;
-  var nodes = {}; // id -> data
-  var edges = {}; // id -> data
-  var nodeEls = {}; // id -> div
+  var nodes = {};   // id -> data
+  var edges = {};   // id -> data
+  var drillPath = []; // [] | [bucket] | [bucket, id]
+  var filters = { kinds: {}, query: '' }; // kinds: {} means no restriction
 
-  function applyTransform(){
-    world.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+  function dotColor(n){
+    if(n.kind === 'experiment') return n.status === 'success' ? 'var(--success)' : n.status === 'failed' ? 'var(--fail)' : 'var(--neutral)';
+    return n.kind === 'finding' ? 'var(--finding)' : 'var(--paper)';
   }
-
-  // ---- screen <-> board space ----
-  function toBoard(clientX, clientY){
-    var r = viewport.getBoundingClientRect();
-    return { x: (clientX - r.left - tx) / scale, y: (clientY - r.top - ty) / scale };
-  }
-
-  // ---- pan (+ click-empty-space-to-exit-focus) ----
-  var panning = false, panStartX = 0, panStartY = 0, panTx0 = 0, panTy0 = 0, panMoved = false;
-  viewport.addEventListener('pointerdown', function(e){
-    if(e.target.closest('.board-node')) return;
-    if(connectMode) { cancelConnect(); return; }
-    panning = true; panMoved = false;
-    viewport.classList.add('panning');
-    panStartX = e.clientX; panStartY = e.clientY; panTx0 = tx; panTy0 = ty;
-    viewport.setPointerCapture(e.pointerId);
-  });
-  viewport.addEventListener('pointermove', function(e){
-    if(panning){
-      if(Math.abs(e.clientX - panStartX) > 4 || Math.abs(e.clientY - panStartY) > 4) panMoved = true;
-      tx = panTx0 + (e.clientX - panStartX);
-      ty = panTy0 + (e.clientY - panStartY);
-      applyTransform();
-    }
-    if(connectMode && pendingSource){ drawGhostEdge(e.clientX, e.clientY); }
-  });
-  viewport.addEventListener('pointerup', function(e){
-    if(panning){
-      panning = false;
-      viewport.classList.remove('panning');
-      if(!panMoved && focusMode) exitFocus();
-    }
-  });
-
-  // ---- zoom ----
-  function setScale(next){
-    scale = Math.max(0.3, Math.min(2.5, next));
-    applyTransform();
-  }
-  viewport.addEventListener('wheel', function(e){
-    e.preventDefault();
-    setScale(scale * (e.deltaY < 0 ? 1.1 : 1/1.1));
-  }, { passive:false });
-  document.getElementById('btn-zoom-in').addEventListener('click', function(){ setScale(scale * 1.2); });
-  document.getElementById('btn-zoom-out').addEventListener('click', function(){ setScale(scale / 1.2); });
-  document.getElementById('btn-zoom-reset').addEventListener('click', function(){ scale = 1; tx = 0; ty = 0; applyTransform(); });
-
-  // ---- connect mode ----
-  var connectMode = false, pendingSource = null;
-  var connectBtn = document.getElementById('btn-connect');
-  var connectHint = document.getElementById('connect-hint');
-  var ghostPath = null;
-
-  function setConnectMode(on){
-    connectMode = on;
-    connectBtn.classList.toggle('active', on);
-    viewport.classList.toggle('connecting', on);
-    connectHint.classList.toggle('show', on);
-    if(!on) cancelConnect();
-  }
-  connectBtn.addEventListener('click', function(){ setConnectMode(!connectMode); });
-  document.addEventListener('keydown', function(e){
-    if(e.key !== 'Escape') return;
-    if(pendingSource) cancelConnect();
-    else if(connectMode) setConnectMode(false);
-    else if(focusMode) exitFocus();
-  });
-
-  function cancelConnect(){
-    pendingSource = null;
-    Object.keys(nodeEls).forEach(function(id){ nodeEls[id].classList.remove('connect-source'); });
-    if(ghostPath){ ghostPath.remove(); ghostPath = null; }
-  }
-
-  function drawGhostEdge(clientX, clientY){
-    var a = nodeEls[pendingSource];
-    if(!a) return;
-    var start = centerOf(a);
-    var p = toBoard(clientX, clientY);
-    if(!ghostPath){
-      ghostPath = document.createElementNS('http://www.w3.org/2000/svg','path');
-      ghostPath.setAttribute('class','edge-ghost');
-      svg.appendChild(ghostPath);
-    }
-    ghostPath.setAttribute('d', 'M ' + start.x + ' ' + start.y + ' L ' + p.x + ' ' + p.y);
-  }
-
-  // ---- geometry helpers ----
-  function centerOf(el){
-    return { x: parseFloat(el.style.left) + el.offsetWidth/2, y: parseFloat(el.style.top) + el.offsetHeight/2 };
-  }
-  function edgePoint(el, towardX, towardY){
-    var c = centerOf(el), hw = el.offsetWidth/2, hh = el.offsetHeight/2;
-    var dx = towardX - c.x, dy = towardY - c.y;
-    if(dx === 0 && dy === 0) return c;
-    var scaleX = hw / Math.abs(dx || 1e-6), scaleY = hh / Math.abs(dy || 1e-6);
-    var s = Math.min(scaleX, scaleY);
-    return { x: c.x + dx * s, y: c.y + dy * s };
-  }
-
-  // ---- focus mode (Obsidian-style local graph): click a node to show only
-  // it + its direct neighbors, collapsing (hiding) everything else ----
-  var focusMode = false, focusCenter = null, focusedSet = null;
-  var focusStatus = document.getElementById('focus-status');
-  var focusStatusText = document.getElementById('focus-status-text');
-
-  function neighborsOf(id){
-    var set = {}; set[id] = true;
-    Object.keys(edges).forEach(function(eid){
-      var e = edges[eid];
-      if(e.from === id) set[e.to] = true;
-      if(e.to === id) set[e.from] = true;
-    });
-    return set;
-  }
-
-  function enterFocus(id){
-    if(!nodeEls[id]) return;
-    focusCenter = id;
-    focusedSet = neighborsOf(id);
-    focusMode = true;
-    applyFocusVisibility();
-    fitViewToIds(Object.keys(focusedSet));
-    updateFocusUI();
-  }
-
-  function exitFocus(){
-    focusMode = false; focusCenter = null; focusedSet = null;
-    applyFocusVisibility();
-    updateFocusUI();
-  }
-
-  function toggleFocus(id){
-    if(focusMode && focusCenter === id){ exitFocus(); return; }
-    enterFocus(id);
-  }
-
-  function applyFocusVisibility(){
-    var total = Object.keys(nodeEls).length;
-    Object.keys(nodeEls).forEach(function(id){
-      var el = nodeEls[id];
-      var show = !focusMode || focusedSet[id];
-      el.classList.toggle('collapsed', !show);
-      el.classList.toggle('focus-center', focusMode && id === focusCenter);
-    });
-    redrawEdges();
-    if(focusMode){
-      var shown = Object.keys(focusedSet).length;
-      focusStatusText.textContent = shown + '개 표시 · ' + (total - shown) + '개 접힘';
-    }
-  }
-
-  function updateFocusUI(){
-    focusStatus.classList.toggle('show', focusMode);
-  }
-
-  function fitViewToIds(ids){
-    var xs = [], ys = [];
-    ids.forEach(function(id){
-      var n = nodes[id];
-      if(!n) return;
-      xs.push(n.x || 0, (n.x || 0) + 240);
-      ys.push(n.y || 0, (n.y || 0) + 90);
-    });
-    if(!xs.length) return;
-    var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
-    var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
-    var vp = viewport.getBoundingClientRect();
-    var pad = 90;
-    var s = Math.min((vp.width - pad * 2) / Math.max(1, maxX - minX), (vp.height - pad * 2) / Math.max(1, maxY - minY), 1.4);
-    s = Math.max(0.25, Math.min(2.5, s));
-    var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-    scale = s;
-    tx = vp.width / 2 - cx * s;
-    ty = vp.height / 2 - cy * s;
-    applyTransform();
-  }
-
-  document.getElementById('btn-focus-exit').addEventListener('click', exitFocus);
-
-  // ---- rendering ----
   function kindLabel(n){
     if(n.kind === 'experiment') return 'EXPERIMENT · ' + (n.status === 'success' ? 'SUCCESS' : n.status === 'failed' ? 'FAILED' : 'INFO');
     return n.kind === 'paper' ? 'PAPER' : 'FINDING';
   }
+  function bucketOf(n){
+    if(n.category) return n.category;
+    return n.kind === 'paper' ? 'Uncategorized' : 'Findings & Experiments';
+  }
 
-  function renderNode(id, n){
-    var el = nodeEls[id];
-    if(!el){
-      el = document.createElement('div');
-      el.className = 'board-node';
-      el.dataset.id = id;
-      el.innerHTML =
-        '<button type="button" class="del" title="삭제">×</button>' +
-        '<p class="eyebrow"></p><h4></h4><p class="body"></p>' +
-        '<div class="meta" style="display:none;"></div>';
-      world.appendChild(el);
-      nodeEls[id] = el;
-      wireNodeEvents(el);
+  function matchesFilters(n){
+    if(Object.keys(filters.kinds).length && !filters.kinds[n.kind]) return false;
+    if(filters.query){
+      var q = filters.query;
+      var hay = ((n.title || '') + ' ' + (n.authors || '')).toLowerCase();
+      if(hay.indexOf(q) === -1) return false;
     }
-    el.dataset.kind = n.kind;
-    el.dataset.status = n.status || 'info';
-    el.style.left = (n.x || 0) + 'px';
-    el.style.top = (n.y || 0) + 'px';
-    el.querySelector('.eyebrow').textContent = kindLabel(n);
-    el.querySelector('h4').textContent = n.title || '(제목 없음)';
-    el.querySelector('.body').textContent = n.text || '';
-    var meta = el.querySelector('.meta');
-    if(n.kind === 'paper' && (n.authors || n.year || n.notionUrl)){
-      meta.style.display = 'flex';
-      meta.innerHTML =
-        '<span>' + [n.authors, n.year].filter(Boolean).join(' · ') + '</span>' +
-        (n.notionUrl ? '<a href="' + n.notionUrl + '" target="_blank" rel="noopener">Notion &#8599;</a>' : '');
-    } else if(n.kind === 'experiment' && n.metric){
-      meta.style.display = 'flex';
-      meta.innerHTML = '<span>' + n.metric + '</span><span></span>';
+    return true;
+  }
+
+  function computeBuckets(){
+    var b = {};
+    Object.keys(nodes).forEach(function(id){
+      var n = nodes[id];
+      if(!matchesFilters(n)) return;
+      var key = bucketOf(n);
+      (b[key] = b[key] || []).push(id);
+    });
+    Object.keys(b).forEach(function(k){
+      b[k].sort(function(a, c){ return (nodes[a].title || '').localeCompare(nodes[c].title || ''); });
+    });
+    return b;
+  }
+
+  // ---------------------------------------------------------------- render
+  function render(){
+    renderBreadcrumb();
+    renderStage();
+    renderSidebarTree();
+  }
+
+  function renderBreadcrumb(){
+    var el = document.getElementById('breadcrumb');
+    var parts = ['<a href="#" data-lvl="0">전체</a>'];
+    if(drillPath.length >= 1) parts.push('<span class="sep">›</span><a href="#" data-lvl="1">' + escapeHtml(drillPath[0]) + '</a>');
+    if(drillPath.length >= 2){
+      var n = nodes[drillPath[1]];
+      parts.push('<span class="sep">›</span><span class="cur">' + escapeHtml(n ? n.title : '') + '</span>');
+    }
+    el.innerHTML = parts.join('');
+    el.querySelectorAll('a[data-lvl]').forEach(function(a){
+      a.addEventListener('click', function(e){
+        e.preventDefault();
+        var lvl = parseInt(a.getAttribute('data-lvl'), 10);
+        drillPath = drillPath.slice(0, lvl);
+        render();
+      });
+    });
+  }
+
+  function stageClassFor(){
+    return drillPath.length === 0 ? 'lv-buckets' : drillPath.length === 1 ? 'lv-items' : 'lv-detail';
+  }
+
+  function renderStage(){
+    var stage = document.getElementById('stage');
+    stage.className = stageClassFor();
+    var inner = document.createElement('div');
+    inner.id = 'stage-inner';
+
+    var buckets = computeBuckets();
+    var bucketKeys = Object.keys(buckets).sort();
+
+    if(!Object.keys(nodes).length){
+      inner.innerHTML =
+        '<div id="empty-state"><p class="eyebrow">// paper trail</p><h2>아직 노드가 없습니다</h2>' +
+        '<p>Claude와의 대화에서 "이 논문 여기 추가해줘"라고 말하면 노트가 여기 올라옵니다. ' +
+        '직접 빠른 메모를 남기려면 위쪽 "+ 노드" 버튼을 쓰세요.</p></div>';
+    } else if(drillPath.length === 0){
+      inner.innerHTML = '<div class="bucket-grid">' + bucketKeys.map(function(key){
+        var ids = buckets[key];
+        var dotsHtml = ids.slice(0, 6).map(function(id){ return '<i style="background:' + dotColor(nodes[id]) + '"></i>'; }).join('');
+        return (
+          '<div class="bucket-card" data-bucket="' + escapeAttr(key) + '">' +
+            '<div class="name">' + escapeHtml(key) + '</div>' +
+            '<div class="cnt mono">' + ids.length + '개</div>' +
+            '<div class="dots">' + dotsHtml + '</div>' +
+          '</div>'
+        );
+      }).join('') + '</div>';
+      if(!bucketKeys.length) inner.innerHTML = '<div id="empty-state"><h2>검색/필터 결과가 없습니다</h2></div>';
+    } else if(drillPath.length === 1){
+      var ids1 = buckets[drillPath[0]] || [];
+      inner.innerHTML =
+        '<div class="item-list">' + ids1.map(function(id){
+          var n = nodes[id];
+          var sub = n.kind === 'paper' ? [n.authors, n.year].filter(Boolean).join(' · ') : (n.metric || '');
+          return (
+            '<div class="item-row" data-id="' + id + '" style="border-left-color:' + dotColor(n) + '">' +
+              '<div>' +
+                '<div class="eyebrow">' + kindLabel(n) + '</div>' +
+                '<div class="title">' + escapeHtml(n.title || '(제목 없음)') + '</div>' +
+                (sub ? '<div class="sub">' + escapeHtml(sub) + '</div>' : '') +
+              '</div>' +
+              '<span class="chev">›</span>' +
+            '</div>'
+          );
+        }).join('') + '</div>';
+      if(!ids1.length) inner.innerHTML = '<div id="empty-state"><h2>이 카테고리엔 항목이 없습니다</h2></div>';
     } else {
-      meta.style.display = 'none';
+      inner.innerHTML = renderDetail(drillPath[1]);
     }
-    if(focusMode){
-      el.classList.toggle('collapsed', !focusedSet[id]);
-      el.classList.toggle('focus-center', id === focusCenter);
-    }
+
+    stage.innerHTML = '';
+    stage.appendChild(inner);
+    wireStageEvents();
   }
 
-  function removeNodeEl(id){
-    if(nodeEls[id]){ nodeEls[id].remove(); delete nodeEls[id]; }
-  }
+  function renderDetail(id){
+    var n = nodes[id];
+    if(!n) return '<div id="empty-state"><h2>노드를 찾을 수 없습니다</h2></div>';
+    var color = dotColor(n);
+    var metaBits = [];
+    if(n.kind === 'paper'){
+      if(n.authors) metaBits.push(escapeHtml(n.authors));
+      if(n.year) metaBits.push(n.year);
+      if(n.notionUrl) metaBits.push('<a href="' + escapeAttr(n.notionUrl) + '" target="_blank" rel="noopener">Notion &#8599;</a>');
+    } else if(n.kind === 'experiment' && n.metric){
+      metaBits.push(escapeHtml(n.metric));
+    }
 
-  function redrawEdges(){
-    Array.prototype.slice.call(svg.querySelectorAll('path.edge, text.edge-label, text.edge-label-bg')).forEach(function(el){ el.remove(); });
-    Object.keys(edges).forEach(function(id){
-      var e = edges[id];
-      var a = nodeEls[e.from], b = nodeEls[e.to];
-      if(!a || !b) return;
-      if(focusMode && !(focusedSet[e.from] && focusedSet[e.to])) return;
-      var ca = centerOf(a), cb = centerOf(b);
-      var p1 = edgePoint(a, cb.x, cb.y), p2 = edgePoint(b, ca.x, ca.y);
-      var path = document.createElementNS('http://www.w3.org/2000/svg','path');
-      path.setAttribute('class','edge');
-      path.setAttribute('d', 'M ' + p1.x + ' ' + p1.y + ' L ' + p2.x + ' ' + p2.y);
-      path.dataset.id = id;
-      svg.appendChild(path);
-      if(e.label){
-        var mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
-        var bg = document.createElementNS('http://www.w3.org/2000/svg','text');
-        bg.setAttribute('class','edge-label-bg'); bg.setAttribute('x', mx); bg.setAttribute('y', my);
-        bg.textContent = e.label;
-        var fg = document.createElementNS('http://www.w3.org/2000/svg','text');
-        fg.setAttribute('class','edge-label'); fg.setAttribute('x', mx); fg.setAttribute('y', my);
-        fg.textContent = e.label;
-        svg.appendChild(bg); svg.appendChild(fg);
-      }
+    var cites = [], citedBy = [];
+    Object.keys(edges).forEach(function(eid){
+      var e = edges[eid];
+      if(e.from === id && nodes[e.to]) cites.push(e.to);
+      if(e.to === id && nodes[e.from]) citedBy.push(e.from);
     });
+
+    function relList(title, ids){
+      if(!ids.length) return '';
+      return (
+        '<div class="rel-block"><p class="sb-section-label">' + title + ' (' + ids.length + ')</p>' +
+        '<div class="rel-list">' + ids.map(function(rid){
+          return '<a class="rel-item" data-jump="' + rid + '">' + escapeHtml(nodes[rid].title || rid) + '</a>';
+        }).join('') + '</div></div>'
+      );
+    }
+
+    return (
+      '<div class="detail-card" style="border-left-color:' + color + '">' +
+        '<p class="eyebrow" style="color:' + color + '">' + kindLabel(n) + '</p>' +
+        '<h2>' + escapeHtml(n.title || '(제목 없음)') + '</h2>' +
+        (metaBits.length ? '<div class="meta-line">' + metaBits.join(' <span class="sep">·</span> ') + '</div>' : '') +
+        '<div class="text-box">' + escapeHtml(n.text || '') + '</div>' +
+        relList('인용한 논문', cites) +
+        relList('이 논문을 인용', citedBy) +
+        '<div class="detail-actions"><button type="button" class="btn-del" id="btn-detail-del">이 노드 삭제</button></div>' +
+      '</div>'
+    );
   }
 
-  function renderAll(){
-    Object.keys(nodes).forEach(function(id){ renderNode(id, nodes[id]); });
-    redrawEdges();
-    emptyState.classList.toggle('hide', Object.keys(nodes).length > 0);
+  function wireStageEvents(){
+    document.querySelectorAll('.bucket-card').forEach(function(el){
+      el.addEventListener('click', function(){
+        drillPath = [el.getAttribute('data-bucket')];
+        render();
+      });
+    });
+    document.querySelectorAll('.item-row').forEach(function(el){
+      el.addEventListener('click', function(){
+        drillPath = [drillPath[0], el.getAttribute('data-id')];
+        render();
+      });
+    });
+    document.querySelectorAll('.rel-item').forEach(function(el){
+      el.addEventListener('click', function(){
+        var rid = el.getAttribute('data-jump');
+        drillPath = [bucketOf(nodes[rid]), rid];
+        render();
+      });
+    });
+    var delBtn = document.getElementById('btn-detail-del');
+    if(delBtn) delBtn.addEventListener('click', function(){ deleteNode(drillPath[1]); });
   }
 
-  // ---- node drag + delete + connect-click ----
-  function wireNodeEvents(el){
-    var dragging = false, moved = false, sx = 0, sy = 0, x0 = 0, y0 = 0;
-    el.addEventListener('pointerdown', function(e){
-      if(e.target.closest('.del')) return;
-      var id = el.dataset.id;
-      if(connectMode){
+  // ------------------------------------------------------------ sidebar tree
+  var sbExpanded = {}; // bucket -> bool
+
+  function renderSidebarTree(){
+    var el = document.getElementById('sb-tree');
+    var buckets = computeBuckets();
+    var keys = Object.keys(buckets).sort();
+    var searching = !!filters.query;
+    el.innerHTML = keys.map(function(key){
+      var ids = buckets[key];
+      var open = searching || sbExpanded[key] || drillPath[0] === key;
+      var itemsHtml = open ? ids.map(function(id){
+        var n = nodes[id];
+        var cur = drillPath[1] === id;
+        return (
+          '<div class="sb-item' + (cur ? ' current' : '') + '" data-id="' + id + '" data-bucket="' + escapeAttr(key) + '">' +
+            '<span class="dot" style="background:' + dotColor(n) + '"></span>' +
+            '<span class="t">' + escapeHtml(n.title || '(제목 없음)') + '</span>' +
+          '</div>'
+        );
+      }).join('') : '';
+      return (
+        '<div class="sb-bucket-head' + (drillPath[0] === key && drillPath.length === 1 ? ' current' : '') + '" data-bucket="' + escapeAttr(key) + '">' +
+          '<span class="car">' + (open ? '▾' : '▸') + '</span>' +
+          '<span>' + escapeHtml(key) + '</span>' +
+          '<span class="cnt">' + ids.length + '</span>' +
+        '</div>' +
+        (open ? '<div class="sb-items">' + itemsHtml + '</div>' : '')
+      );
+    }).join('');
+
+    el.querySelectorAll('.sb-bucket-head').forEach(function(head){
+      head.addEventListener('click', function(){
+        var key = head.getAttribute('data-bucket');
+        if(filters.query){ drillPath = [key]; render(); return; }
+        sbExpanded[key] = !sbExpanded[key];
+        renderSidebarTree();
+      });
+    });
+    el.querySelectorAll('.sb-item').forEach(function(item){
+      item.addEventListener('click', function(e){
         e.stopPropagation();
-        if(!pendingSource){
-          pendingSource = id;
-          el.classList.add('connect-source');
-        } else if(pendingSource !== id){
-          createEdge(pendingSource, id);
-          cancelConnect();
-        }
-        return;
-      }
-      dragging = true; moved = false;
-      el.classList.add('dragging');
-      sx = e.clientX; sy = e.clientY;
-      x0 = parseFloat(el.style.left); y0 = parseFloat(el.style.top);
-      el.setPointerCapture(e.pointerId);
-      e.stopPropagation();
-    });
-    el.addEventListener('pointermove', function(e){
-      if(!dragging) return;
-      if(Math.abs(e.clientX - sx) > 4 || Math.abs(e.clientY - sy) > 4) moved = true;
-      var dx = (e.clientX - sx) / scale, dy = (e.clientY - sy) / scale;
-      el.style.left = (x0 + dx) + 'px';
-      el.style.top = (y0 + dy) + 'px';
-      redrawEdges();
-    });
-    el.addEventListener('pointerup', function(e){
-      if(!dragging) return;
-      dragging = false;
-      el.classList.remove('dragging');
-      var id = el.dataset.id;
-      if(moved){
-        var x = parseFloat(el.style.left), y = parseFloat(el.style.top);
-        nodes[id] = Object.assign({}, nodes[id], { x: x, y: y });
-        persistNodePosition(id, x, y);
-      } else {
-        toggleFocus(id);
-      }
-    });
-    el.querySelector('.del').addEventListener('click', function(e){
-      e.stopPropagation();
-      deleteNode(el.dataset.id);
+        drillPath = [item.getAttribute('data-bucket'), item.getAttribute('data-id')];
+        render();
+      });
     });
   }
 
-  // ---- db wiring ----
-  var db = null;
-  var nodesCol = null, edgesCol = null;
+  // ------------------------------------------------------------------ util
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+  function escapeAttr(s){ return escapeHtml(s); }
 
-  function persistNodePosition(id, x, y){
-    if(!nodesCol) return;
-    nodesCol.doc(id).update({ x: x, y: y }).catch(function(){});
+  // ------------------------------------------------------------- filters ui
+  var KIND_OPTIONS = [['paper', 'Paper'], ['finding', 'Finding'], ['experiment', 'Experiment']];
+  function renderFilters(){
+    var el = document.getElementById('sb-filters');
+    el.innerHTML = KIND_OPTIONS.map(function(k){
+      return '<span class="chip' + (filters.kinds[k[0]] ? ' on' : '') + '" data-kind="' + k[0] + '">' + k[1] + '</span>';
+    }).join('');
+    el.querySelectorAll('.chip').forEach(function(chip){
+      chip.addEventListener('click', function(){
+        var k = chip.getAttribute('data-kind');
+        if(filters.kinds[k]) delete filters.kinds[k]; else filters.kinds[k] = true;
+        renderFilters();
+        render();
+      });
+    });
   }
 
-  function createEdge(from, to){
-    var id = 'e-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
-    var data = { from: from, to: to, label: '' };
-    edges[id] = data;
-    redrawEdges();
-    if(edgesCol) edgesCol.doc(id).set(data).catch(function(){});
-  }
+  document.getElementById('sb-search').addEventListener('input', function(e){
+    filters.query = e.target.value.trim().toLowerCase();
+    render();
+  });
+
+  // -------------------------------------------------------------- db wiring
+  var db = null, nodesCol = null, edgesCol = null;
+
+  function persistDelete(id){ if(nodesCol) nodesCol.doc(id).delete().catch(function(){}); }
 
   function deleteNode(id){
     delete nodes[id];
-    removeNodeEl(id);
     Object.keys(edges).forEach(function(eid){
       if(edges[eid].from === id || edges[eid].to === id){
-        delete edges[eid];
-        if(edgesCol) edgesCol.doc(eid).delete().catch(function(){});
+        var eeid = eid;
+        delete edges[eeid];
+        if(edgesCol) edgesCol.doc(eeid).delete().catch(function(){});
       }
     });
-    redrawEdges();
-    emptyState.classList.toggle('hide', Object.keys(nodes).length > 0);
-    if(nodesCol) nodesCol.doc(id).delete().catch(function(){});
-    if(focusMode && id === focusCenter) exitFocus();
+    persistDelete(id);
+    drillPath = drillPath.slice(0, 1);
+    render();
   }
 
-  function addNodeFromComposer(data){
-    var id = 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
-    var vp = viewport.getBoundingClientRect();
-    var center = toBoard(vp.left + vp.width/2, vp.top + vp.height/2);
-    data.x = center.x - 120; data.y = center.y - 40;
+  function addNode(data){
+    var id = 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
     nodes[id] = data;
-    renderNode(id, data);
-    emptyState.classList.add('hide');
     if(nodesCol) nodesCol.doc(id).set(data).catch(function(){});
+    drillPath = [bucketOf(data), id];
+    render();
   }
 
   async function initDb(){
-    try {
-      db = await window.claude.use('db');
-    } catch(e) { db = null; }
-    if(!db) return; // no persistence available in this view; board still works in-memory
+    try { db = await window.claude.use('db'); } catch(e){ db = null; }
+    if(!db) return;
     nodesCol = db.collection('nodes');
     edgesCol = db.collection('edges');
     nodesCol.onSnapshot(function(snap){
-      var seen = {};
-      snap.docs.forEach(function(d){
-        seen[d.id] = true;
-        var data = d.data();
-        var local = nodeEls[d.id];
-        // don't clobber a node the local user is actively dragging
-        if(local && local.classList.contains('dragging')) return;
-        nodes[d.id] = data;
-        renderNode(d.id, data);
-      });
-      Object.keys(nodeEls).forEach(function(id){ if(!seen[id]) { delete nodes[id]; removeNodeEl(id); } });
-      redrawEdges();
-      emptyState.classList.toggle('hide', Object.keys(nodes).length > 0);
-    }, function(){ /* degrade silently: board stays usable in-memory */ });
+      nodes = {};
+      snap.docs.forEach(function(d){ nodes[d.id] = d.data(); });
+      render();
+    }, function(){});
     edgesCol.onSnapshot(function(snap){
       edges = {};
       snap.docs.forEach(function(d){ edges[d.id] = d.data(); });
-      redrawEdges();
+      if(drillPath.length === 2) render(); // detail view shows cites/cited-by
     }, function(){});
   }
 
-  // ---- composer (quick add) ----
+  // ----------------------------------------------------------------- composer
+  var CATEGORY_OPTIONS = ['Vision', 'Language', 'Speech-Audio', 'Time-Series', 'Multimodal', 'Robotics', 'Graph-Network', 'Generative', 'Algorithms', 'Uncategorized'];
   var composer = document.getElementById('composer');
   var cKind = document.getElementById('c-kind');
+  var cCategory = document.getElementById('c-category');
   var cTitle = document.getElementById('c-title');
   var cText = document.getElementById('c-text');
   var cStatus = document.getElementById('c-status');
@@ -701,87 +593,39 @@
   var cYear = document.getElementById('c-year');
   var cUrl = document.getElementById('c-url');
 
+  cCategory.innerHTML = CATEGORY_OPTIONS.map(function(c){ return '<option value="' + c + '">' + c + '</option>'; }).join('');
+
   function updateComposerFields(){
-    document.getElementById('c-extra-experiment').style.display = cKind.value === 'experiment' ? 'block' : 'none';
-    document.getElementById('c-extra-paper').style.display = cKind.value === 'paper' ? 'block' : 'none';
+    var isExp = cKind.value === 'experiment';
+    var isPaper = cKind.value === 'paper';
+    document.getElementById('c-extra-experiment').style.display = isExp ? 'block' : 'none';
+    document.getElementById('c-extra-paper').style.display = isPaper ? 'block' : 'none';
+    document.getElementById('c-extra-paper2').style.display = isPaper ? 'block' : 'none';
   }
   cKind.addEventListener('change', updateComposerFields);
 
-  document.getElementById('btn-add').addEventListener('click', function(){
-    composer.classList.add('show');
-    composer.style.left = '16px';
-    composer.style.top = '64px';
-    cTitle.focus();
-  });
+  document.getElementById('btn-add').addEventListener('click', function(){ composer.classList.add('show'); cTitle.focus(); });
   document.getElementById('c-cancel').addEventListener('click', function(){
     composer.classList.remove('show');
     cTitle.value = ''; cText.value = ''; cAuthors.value = ''; cYear.value = ''; cUrl.value = '';
   });
   document.getElementById('c-save').addEventListener('click', function(){
-    if(!cTitle.value.trim()) { cTitle.focus(); return; }
-    var data = { kind: cKind.value, title: cTitle.value.trim(), text: cText.value.trim() };
+    if(!cTitle.value.trim()){ cTitle.focus(); return; }
+    var data = { kind: cKind.value, title: cTitle.value.trim(), text: cText.value.trim(), status: 'info' };
     if(cKind.value === 'experiment') data.status = cStatus.value;
-    else data.status = 'info';
     if(cKind.value === 'paper'){
+      data.category = cCategory.value;
       if(cAuthors.value.trim()) data.authors = cAuthors.value.trim();
       if(cYear.value.trim()) data.year = cYear.value.trim();
       if(cUrl.value.trim()) data.notionUrl = cUrl.value.trim();
     }
-    addNodeFromComposer(data);
+    addNode(data);
     document.getElementById('c-cancel').click();
   });
   updateComposerFields();
 
-  // ---- search (find a node by title, jump into focus on it) ----
-  var searchWrap = document.getElementById('search-wrap');
-  var searchInput = document.getElementById('search-input');
-  var searchResults = document.getElementById('search-results');
-
-  function renderSearchResults(list){
-    if(!list.length){
-      searchResults.innerHTML = '<div class="empty">검색 결과 없음</div>';
-      return;
-    }
-    searchResults.innerHTML = list.slice(0, 12).map(function(id){
-      var n = nodes[id];
-      return '<a href="#" data-id="' + id + '">' + (n.title || '(제목 없음)') +
-        '<span>' + kindLabel(n) + (n.authors ? ' · ' + n.authors : '') + '</span></a>';
-    }).join('');
-  }
-  searchInput.addEventListener('input', function(){
-    var q = searchInput.value.trim().toLowerCase();
-    searchWrap.classList.toggle('open', !!q);
-    searchResults.classList.toggle('show', !!q);
-    if(!q){ searchResults.innerHTML = ''; return; }
-    var matches = Object.keys(nodes).filter(function(id){
-      var n = nodes[id];
-      return (n.title || '').toLowerCase().indexOf(q) !== -1 ||
-             (n.authors || '').toLowerCase().indexOf(q) !== -1;
-    });
-    renderSearchResults(matches);
-  });
-  searchResults.addEventListener('click', function(e){
-    var a = e.target.closest('a[data-id]');
-    if(!a) return;
-    e.preventDefault();
-    enterFocus(a.getAttribute('data-id'));
-    searchResults.classList.remove('show');
-    searchInput.value = '';
-  });
-  document.addEventListener('click', function(e){
-    if(!searchWrap.contains(e.target)) searchResults.classList.remove('show');
-  });
-  searchInput.addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){
-      var first = searchResults.querySelector('a');
-      if(first) first.click();
-    } else if(e.key === 'Escape'){
-      searchResults.classList.remove('show');
-      searchInput.blur();
-    }
-  });
-
-  applyTransform();
+  renderFilters();
+  render();
   initDb();
 })();
 </script>
