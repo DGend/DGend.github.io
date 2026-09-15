@@ -4,6 +4,19 @@
   Live URL: https://claude.ai/code/artifact/f706ce5c-b82d-4bba-8cac-81bb9667a988
   To update: edit this file, then republish via the Artifact tool with
   url=<the URL above> so it updates in place instead of creating a new one.
+
+  Architecture (Heptabase-style, per user request):
+  - `nodes` (library): every card ever made lives here once, globally.
+  - `boards`: named whiteboards. `boards/<id>/items/<nodeId>`: {x,y} —
+    a card's position is PER-BOARD (same card can sit on multiple boards
+    at different spots). `boards/<id>/sections/<id>`: {x,y,w,h,label} —
+    purely-visual grouping frames, deleting one never deletes cards in it.
+  - `edges` (global): citation/relation links, shown on any board where
+    both endpoints happen to be present.
+  Simplified vs. real Heptabase (noted to the user): connections are a
+  two-click "connect mode" toggle instead of proximity drag-to-link;
+  the library sidebar is a searchable/filterable category tree instead
+  of full tag-as-table views.
 -->
 <title>Paper Trail</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
@@ -22,28 +35,46 @@
   }
   .mono{ font-family:'IBM Plex Mono',ui-monospace,monospace; }
   a{ color:inherit; }
+  button{ font-family:inherit; }
 
   #app{ display:flex; height:100vh; }
 
-  /* ---- left: search + filter + tree ---- */
+  /* ================= sidebar: boards + library ================= */
   #sidebar{
-    width:320px; flex:none; height:100%; overflow-y:auto; background:var(--panel);
-    border-right:1px solid var(--line); padding:18px 16px 40px; display:flex; flex-direction:column; gap:16px;
+    width:300px; flex:none; height:100%; overflow-y:auto; background:var(--panel);
+    border-right:1px solid var(--line); padding:16px 14px 40px; display:flex; flex-direction:column; gap:16px;
   }
   #sidebar-brand .name{ font-size:15px; font-weight:700; }
   #sidebar-brand .tag{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); }
+
+  .sb-section-label{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-faint); margin:0 0 8px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .sb-section-label button{
+    background:none; border:1px solid var(--line); color:var(--ink-soft); border-radius:5px;
+    font-size:11px; padding:1px 6px; cursor:pointer; font-family:'IBM Plex Mono',monospace;
+  }
+  .sb-section-label button:hover{ border-color:var(--paper); color:var(--paper); }
+
+  #board-list{ display:flex; flex-direction:column; gap:2px; }
+  .board-row{
+    display:flex; align-items:center; gap:6px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:12.5px;
+  }
+  .board-row:hover{ background:var(--panel-2); }
+  .board-row.current{ background:rgba(90,167,224,.1); color:var(--paper); font-weight:600; }
+  .board-row .t{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+  .board-row .x{ opacity:0; font-size:11px; color:var(--ink-faint); }
+  .board-row:hover .x{ opacity:1; }
+  .board-row .x:hover{ color:var(--fail); }
+
   #sb-search{
     width:100%; box-sizing:border-box; background:var(--panel-2); border:1px solid var(--line);
     border-radius:7px; color:var(--ink); font-family:'IBM Plex Sans KR',sans-serif; font-size:12.5px;
     padding:8px 10px;
   }
   #sb-search::placeholder{ color:var(--ink-faint); }
-
-  .sb-section-label{
-    font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--ink-faint); margin:0;
-  }
-  #sb-filters{ display:flex; flex-wrap:wrap; gap:6px; }
+  #sb-filters{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .chip{
     font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
     background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:4px 10px;
@@ -51,126 +82,170 @@
   }
   .chip:hover{ border-color:var(--paper); }
   .chip.on{ border-color:var(--paper); color:var(--paper); background:rgba(90,167,224,.1); }
-  .chip.on[data-v="failed"]{ border-color:var(--fail); color:var(--fail); background:rgba(226,88,79,.1); }
-  .chip.on[data-v="success"]{ border-color:var(--success); color:var(--success); background:rgba(57,214,127,.1); }
 
-  #sb-tree{ flex:1; display:flex; flex-direction:column; gap:2px; }
+  #sb-tree{ flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
   .sb-bucket-head{
-    display:flex; align-items:center; gap:8px; padding:7px 6px; border-radius:6px; cursor:pointer;
-    font-size:12.5px; font-weight:600;
+    display:flex; align-items:center; gap:8px; padding:6px; border-radius:6px; cursor:pointer;
+    font-size:12px; font-weight:600;
   }
   .sb-bucket-head:hover{ background:var(--panel-2); }
-  .sb-bucket-head.current{ color:var(--paper); }
   .sb-bucket-head .car{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-faint); width:10px; }
   .sb-bucket-head .cnt{ margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-faint); }
   .sb-items{ display:flex; flex-direction:column; gap:1px; padding-left:18px; }
   .sb-item{
-    display:flex; align-items:center; gap:7px; padding:6px 6px; border-radius:5px; cursor:pointer;
-    font-size:12px; color:var(--ink-soft);
+    display:flex; align-items:center; gap:7px; padding:5px 6px; border-radius:5px; font-size:11.5px; color:var(--ink-soft);
   }
   .sb-item:hover{ background:var(--panel-2); color:var(--ink); }
-  .sb-item.current{ color:var(--paper); background:rgba(90,167,224,.08); }
   .sb-item .dot{ width:6px; height:6px; border-radius:50%; flex:none; }
-  .sb-item .t{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-
-  /* ---- right: staged drill-down canvas ---- */
-  #main{ flex:1; height:100%; overflow-y:auto; padding:28px 24px 60px; }
-  #breadcrumb{
-    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); margin-bottom:20px;
-    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+  .sb-item .t{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; cursor:pointer; }
+  .sb-item .add{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-faint); background:none;
+    border:1px solid var(--line); border-radius:4px; width:18px; height:18px; line-height:1; cursor:pointer; flex:none;
   }
-  #breadcrumb a{ color:var(--ink-soft); text-decoration:none; }
-  #breadcrumb a:hover{ color:var(--paper); }
-  #breadcrumb .cur{ color:var(--ink); }
-  #breadcrumb .sep{ color:var(--ink-faint); }
+  .sb-item .add:hover{ border-color:var(--paper); color:var(--paper); }
+  .sb-item.on-board .add{ color:var(--success); border-color:var(--success); }
 
-  #stage{ margin:0 auto; max-width:1100px; transition:max-width .28s ease; }
-  #stage.lv-buckets{ max-width:1100px; }
-  #stage.lv-items{ max-width:820px; }
-  #stage.lv-detail{ max-width:600px; }
-
-  @keyframes stageIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
-  #stage-inner{ animation:stageIn .22s ease; }
-
-  .btn-row{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  /* ================= canvas ================= */
+  #canvas-col{ flex:1; height:100%; position:relative; display:flex; flex-direction:column; min-width:0; }
+  #canvas-toolbar{
+    flex:none; display:flex; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  #board-title{ font-size:14px; font-weight:700; cursor:text; margin-right:auto; }
   .tbtn{
     font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink);
-    background:var(--panel); border:1px solid var(--line); border-radius:7px; padding:7px 12px;
-    cursor:pointer;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:7px 12px; cursor:pointer;
   }
   .tbtn:hover{ border-color:var(--paper); }
-
-  /* bucket grid (level 0) */
-  .bucket-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
-  .bucket-card{
-    background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--paper);
-    border-radius:10px; padding:18px 18px 16px; cursor:pointer; box-shadow:var(--shadow);
+  .tbtn.active{ border-color:var(--paper); color:var(--paper); }
+  .zoomgrp{ display:flex; border:1px solid var(--line); border-radius:7px; overflow:hidden; }
+  .zoomgrp button{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink); background:var(--panel-2);
+    border:0; padding:6px 10px; cursor:pointer; border-right:1px solid var(--line);
   }
-  .bucket-card:hover{ border-color:var(--paper); transform:translateY(-2px); }
-  .bucket-card .name{ font-size:15px; font-weight:700; margin-bottom:6px; }
-  .bucket-card .cnt{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
-  .bucket-card .dots{ display:flex; gap:4px; margin-top:10px; }
-  .bucket-card .dots i{ width:7px; height:7px; border-radius:50%; display:block; }
+  .zoomgrp button:last-child{ border-right:0; }
+  .zoomgrp button:hover{ background:var(--line-soft); }
 
-  /* item list (level 1) */
-  .item-list{ display:flex; flex-direction:column; gap:8px; }
-  .item-row{
-    display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line);
-    border-left:3px solid var(--paper); border-radius:8px; padding:12px 14px; cursor:pointer;
+  #board-viewport{
+    flex:1; position:relative; overflow:hidden; touch-action:none; cursor:grab;
+    background-color:var(--bg);
+    background-image:radial-gradient(var(--line) 1px, transparent 1px);
+    background-size:28px 28px;
   }
-  .item-row:hover{ border-color:var(--paper); }
-  .item-row .eyebrow{
+  #board-viewport.panning{ cursor:grabbing; }
+  #board-viewport.connecting{ cursor:crosshair; }
+  #board-world{ position:absolute; left:0; top:0; width:0; height:0; transform-origin:0 0; will-change:transform; }
+
+  svg#board-edges{ position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
+  svg#board-edges path.edge{ fill:none; stroke:var(--ink-faint); stroke-width:1.6; }
+  svg#board-edges path.edge-ghost{ fill:none; stroke:var(--paper); stroke-width:1.6; stroke-dasharray:4 4; }
+
+  .board-section{
+    position:absolute; border:1.5px dashed var(--line-soft); border-radius:10px; background:rgba(255,255,255,.02);
+    z-index:1;
+  }
+  .board-section .sec-label{
+    position:absolute; top:-11px; left:12px; background:var(--bg); padding:0 8px; font-size:11px;
+    font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); cursor:text; white-space:nowrap;
+  }
+  .board-section .sec-del{
+    position:absolute; top:-11px; right:8px; background:var(--bg); border:1px solid var(--line); border-radius:4px;
+    width:16px; height:16px; font-size:10px; color:var(--ink-faint); cursor:pointer; display:none; line-height:1;
+  }
+  .board-section:hover .sec-del{ display:block; }
+  .board-section .sec-resize{
+    position:absolute; right:-4px; bottom:-4px; width:12px; height:12px; cursor:nwse-resize;
+    border-right:2px solid var(--ink-faint); border-bottom:2px solid var(--ink-faint); opacity:.5;
+  }
+
+  .board-node{
+    position:absolute; width:230px; background:var(--panel); border:1px solid var(--line);
+    border-left-width:3px; border-radius:8px; padding:11px 13px 10px; box-shadow:var(--shadow);
+    cursor:grab; user-select:none; z-index:2;
+  }
+  .board-node.dragging{ cursor:grabbing; box-shadow:0 14px 32px rgba(0,0,0,.5); z-index:6; }
+  .board-node.connect-source{ outline:2px solid var(--paper); outline-offset:2px; }
+  .board-node[data-kind="paper"]{ border-left-color:var(--paper); }
+  .board-node[data-kind="finding"]{ border-left-color:var(--finding); }
+  .board-node[data-kind="experiment"][data-status="success"]{ border-left-color:var(--success); }
+  .board-node[data-kind="experiment"][data-status="failed"]{ border-left-color:var(--fail); }
+  .board-node[data-kind="experiment"][data-status="info"],
+  .board-node[data-kind="experiment"][data-status="neutral"]{ border-left-color:var(--neutral); }
+  .board-node .eyebrow{
     font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase;
-    color:var(--ink-soft); margin-bottom:3px;
+    color:var(--ink-soft); margin:0 0 5px;
   }
-  .item-row .title{ font-size:13.5px; font-weight:600; }
-  .item-row .sub{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-faint); margin-top:3px; }
-  .item-row .chev{ margin-left:auto; color:var(--ink-faint); }
+  .board-node h4{ margin:0; font-size:13px; font-weight:600; line-height:1.35; }
+  .board-node .sub{ margin:5px 0 0; font-size:10.5px; color:var(--ink-faint); font-family:'IBM Plex Mono',monospace; }
+  .board-node .remove{
+    position:absolute; top:5px; right:5px; width:16px; height:16px; border-radius:4px;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--ink-faint);
+    font-size:10px; line-height:1; cursor:pointer; display:none; align-items:center; justify-content:center;
+  }
+  .board-node:hover .remove{ display:flex; }
+  .board-node .remove:hover{ color:var(--fail); border-color:var(--fail); }
 
-  /* detail (level 2 / leaf) */
-  .detail-card{
-    background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--paper);
-    border-radius:12px; padding:26px 26px 22px; box-shadow:var(--shadow);
+  #empty-canvas{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center;
+    pointer-events:none; padding-inline:16px;
   }
-  .detail-card .eyebrow{
-    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
-    margin:0 0 10px;
+  #empty-canvas .box{ max-width:42ch; }
+  #empty-canvas .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--paper); margin:0 0 10px; }
+  #empty-canvas h2{ margin:0 0 10px; font-size:17px; }
+  #empty-canvas p{ margin:0; font-size:12.5px; line-height:1.7; color:var(--ink-soft); }
+  #empty-canvas.hide{ display:none; }
+
+  #connect-hint{
+    position:absolute; left:50%; top:14px; transform:translateX(-50%); z-index:8;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--paper);
+    background:var(--panel); border:1px solid var(--paper); border-radius:7px; padding:6px 14px; display:none;
   }
-  .detail-card h2{ margin:0 0 14px; font-size:19px; line-height:1.35; }
-  .detail-card .meta-line{
+  #connect-hint.show{ display:block; }
+
+  /* ================= detail side-panel ================= */
+  #detail-panel{
+    position:fixed; top:0; right:0; bottom:0; width:400px; background:var(--panel); border-left:1px solid var(--line);
+    box-shadow:-8px 0 24px rgba(0,0,0,.35); transform:translateX(100%); transition:transform .22s ease;
+    z-index:40; overflow-y:auto; padding:22px 22px 30px;
+  }
+  #detail-panel.open{ transform:translateX(0); }
+  #detail-panel .close{
+    position:absolute; top:14px; right:14px; background:none; border:1px solid var(--line); border-radius:6px;
+    width:26px; height:26px; color:var(--ink-soft); cursor:pointer; font-size:13px;
+  }
+  #detail-panel .close:hover{ border-color:var(--paper); color:var(--paper); }
+  #detail-panel .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; margin:0 0 10px; }
+  #detail-panel h2{ margin:0 26px 14px 0; font-size:18px; line-height:1.35; }
+  #detail-panel .meta-line{
     font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); margin-bottom:16px;
     display:flex; gap:10px; flex-wrap:wrap; align-items:center;
   }
-  .detail-card .meta-line a{ color:var(--paper); text-decoration:none; }
-  .detail-card .meta-line a:hover{ text-decoration:underline; }
-  .detail-card .text-box{
+  #detail-panel .meta-line a{ color:var(--paper); text-decoration:none; }
+  #detail-panel .meta-line a:hover{ text-decoration:underline; }
+  #detail-panel .text-box{
     background:var(--panel-2); border:1px solid var(--line-soft); border-radius:8px; padding:14px 16px;
     font-size:13px; line-height:1.7; color:var(--ink-soft); margin-bottom:18px; white-space:pre-wrap;
   }
-  .detail-card .text-box:empty::before{ content:"(아직 요약이 없습니다 — Claude에게 \"이 논문 읽었는데...\"라고 말해주세요)"; font-style:italic; color:var(--ink-faint); }
+  #detail-panel .text-box:empty::before{ content:"(아직 요약이 없습니다)"; font-style:italic; color:var(--ink-faint); }
   .rel-block{ margin-top:16px; }
   .rel-block .sb-section-label{ margin-bottom:8px; }
   .rel-list{ display:flex; flex-direction:column; gap:6px; }
   .rel-item{
     display:block; font-size:12.5px; color:var(--ink); background:var(--panel-2); border:1px solid var(--line);
-    border-radius:6px; padding:8px 10px; text-decoration:none; cursor:pointer;
+    border-radius:6px; padding:8px 10px; cursor:pointer;
   }
   .rel-item:hover{ border-color:var(--paper); }
-  .detail-actions{ display:flex; gap:10px; margin-top:20px; }
-  .detail-actions button{
+  #detail-panel .actions{ display:flex; gap:10px; margin-top:22px; flex-wrap:wrap; }
+  #detail-panel .actions button{
     font-family:'IBM Plex Mono',monospace; font-size:11.5px; border-radius:6px; padding:7px 12px; cursor:pointer;
   }
+  .btn-add-board{ background:var(--panel-2); color:var(--paper); border:1px solid var(--paper); }
   .btn-del{ background:var(--panel-2); color:var(--fail); border:1px solid var(--line); }
   .btn-del:hover{ border-color:var(--fail); }
 
-  #empty-state{ text-align:center; padding:80px 20px; }
-  #empty-state .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--paper); margin:0 0 10px; }
-  #empty-state h2{ margin:0 0 10px; font-size:19px; }
-  #empty-state p{ margin:0 auto; max-width:46ch; font-size:13px; line-height:1.7; color:var(--ink-soft); }
-
-  /* composer */
+  /* ================= composer ================= */
   #composer{
-    position:fixed; z-index:30; width:300px; right:24px; top:24px; background:var(--panel); border:1px solid var(--line);
+    position:fixed; z-index:41; width:300px; right:24px; top:70px; background:var(--panel); border:1px solid var(--line);
     border-radius:10px; padding:14px; box-shadow:var(--shadow); display:none;
   }
   #composer.show{ display:block; }
@@ -193,9 +268,9 @@
   #composer .cancel{ background:var(--panel-2); color:var(--ink-soft); border:1px solid var(--line); }
   #composer .save{ background:var(--paper); color:#08131c; border:1px solid var(--paper); font-weight:600; }
 
-  @media (max-width:760px){
-    #sidebar{ width:240px; }
-    #composer{ width:calc(100vw - 48px); right:24px; }
+  @media (max-width:820px){
+    #sidebar{ width:230px; }
+    #detail-panel{ width:calc(100vw - 32px); }
   }
 </style>
 
@@ -203,26 +278,54 @@
   <div id="sidebar">
     <div id="sidebar-brand">
       <div class="name">Paper Trail</div>
-      <div class="tag mono">// search &amp; filter</div>
+      <div class="tag mono">// heptabase-style board</div>
     </div>
-    <input type="text" id="sb-search" placeholder="제목·저자 검색...">
+
     <div>
-      <p class="sb-section-label">Kind</p>
-      <div id="sb-filters" style="margin-top:8px;"></div>
+      <p class="sb-section-label">보드 <button type="button" id="btn-new-board">+ 새 보드</button></p>
+      <div id="board-list"></div>
     </div>
+
+    <input type="text" id="sb-search" placeholder="라이브러리 검색 (제목·저자)...">
+    <div id="sb-filters"></div>
     <div style="flex:1; min-height:0; display:flex; flex-direction:column;">
-      <p class="sb-section-label" style="margin-bottom:6px;">Browse</p>
-      <div id="sb-tree" style="overflow-y:auto;"></div>
+      <p class="sb-section-label" style="margin-top:4px;">라이브러리</p>
+      <div id="sb-tree"></div>
     </div>
   </div>
 
-  <div id="main">
-    <div id="breadcrumb"></div>
-    <div class="btn-row">
-      <button type="button" class="tbtn" id="btn-add">＋ 노드</button>
+  <div id="canvas-col">
+    <div id="canvas-toolbar">
+      <span id="board-title" class="mono">보드</span>
+      <button type="button" class="tbtn" id="btn-add-card">＋ 카드</button>
+      <button type="button" class="tbtn" id="btn-add-section">▭ 섹션</button>
+      <button type="button" class="tbtn" id="btn-connect">🔗 연결</button>
+      <div class="zoomgrp">
+        <button type="button" id="btn-zoom-out">－</button>
+        <button type="button" id="btn-zoom-reset">100%</button>
+        <button type="button" id="btn-zoom-in">＋</button>
+      </div>
     </div>
-    <div id="stage" class="lv-buckets"><div id="stage-inner"></div></div>
+    <div id="board-viewport">
+      <div id="board-world">
+        <svg id="board-edges"></svg>
+      </div>
+      <div id="connect-hint">연결할 두 번째 카드를 클릭하세요 (Esc로 취소)</div>
+      <div id="empty-canvas">
+        <div class="box">
+          <p class="eyebrow">// empty board</p>
+          <h2>이 보드는 비어 있습니다</h2>
+          <p>왼쪽 라이브러리에서 카드 옆 "+"를 눌러 이 보드에 추가하거나, 위쪽 "+ 카드"로 새 카드를 바로 만드세요.
+          배경을 드래그해 이동, 휠로 확대/축소할 수 있습니다.</p>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
+
+<div id="detail-panel">
+  <button type="button" class="close" id="detail-close">×</button>
+  <div id="detail-body"></div>
 </div>
 
 <div id="composer">
@@ -264,13 +367,29 @@
 
 <script>
 (function(){
-  var KIND_COLOR = { paper:'var(--paper)', finding:'var(--finding)', experiment_success:'var(--success)', experiment_failed:'var(--fail)', experiment_info:'var(--neutral)' };
+  var CATEGORY_OPTIONS = ['Vision', 'Language', 'Speech-Audio', 'Time-Series', 'Multimodal', 'Robotics', 'Graph-Network', 'Generative', 'Algorithms', 'Uncategorized'];
+  var KIND_OPTIONS = [['paper', 'Paper'], ['finding', 'Finding'], ['experiment', 'Experiment']];
 
-  var nodes = {};   // id -> data
-  var edges = {};   // id -> data
-  var drillPath = []; // [] | [bucket] | [bucket, id]
-  var filters = { kinds: {}, query: '' }; // kinds: {} means no restriction
+  var nodes = {};        // library: id -> data (global)
+  var edges = {};        // global relations: id -> {from,to,label}
+  var boardsMeta = {};   // id -> {title}
+  var boardOrder = [];
+  var currentBoardId = null;
+  var boardItems = {};    // nodeId -> {x,y}  (current board only)
+  var sections = {};       // id -> {x,y,w,h,label} (current board only)
+  var nodeEls = {}, sectionEls = {};
+  var filters = { kinds: {}, query: '' };
 
+  var viewport = document.getElementById('board-viewport');
+  var world = document.getElementById('board-world');
+  var svg = document.getElementById('board-edges');
+  var emptyCanvas = document.getElementById('empty-canvas');
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
   function dotColor(n){
     if(n.kind === 'experiment') return n.status === 'success' ? 'var(--success)' : n.status === 'failed' ? 'var(--fail)' : 'var(--neutral)';
     return n.kind === 'finding' ? 'var(--finding)' : 'var(--paper)';
@@ -284,239 +403,395 @@
     return n.kind === 'paper' ? 'Uncategorized' : 'Findings & Experiments';
   }
 
-  function matchesFilters(n){
-    if(Object.keys(filters.kinds).length && !filters.kinds[n.kind]) return false;
-    if(filters.query){
-      var q = filters.query;
-      var hay = ((n.title || '') + ' ' + (n.authors || '')).toLowerCase();
-      if(hay.indexOf(q) === -1) return false;
+  // =========================================================== pan/zoom
+  var tx = 0, ty = 0, scale = 1;
+  function applyTransform(){ world.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')'; }
+  function toBoard(clientX, clientY){
+    var r = viewport.getBoundingClientRect();
+    return { x: (clientX - r.left - tx) / scale, y: (clientY - r.top - ty) / scale };
+  }
+  var panning = false, panStartX = 0, panStartY = 0, panTx0 = 0, panTy0 = 0;
+  viewport.addEventListener('pointerdown', function(e){
+    if(e.target.closest('.board-node') || e.target.closest('.board-section')) return;
+    if(connectMode){ cancelConnect(); return; }
+    panning = true;
+    viewport.classList.add('panning');
+    panStartX = e.clientX; panStartY = e.clientY; panTx0 = tx; panTy0 = ty;
+    viewport.setPointerCapture(e.pointerId);
+  });
+  viewport.addEventListener('pointermove', function(e){
+    if(panning){
+      tx = panTx0 + (e.clientX - panStartX);
+      ty = panTy0 + (e.clientY - panStartY);
+      applyTransform();
     }
-    return true;
+    if(connectMode && pendingSource) drawGhostEdge(e.clientX, e.clientY);
+  });
+  viewport.addEventListener('pointerup', function(){ if(panning){ panning = false; viewport.classList.remove('panning'); } });
+
+  function setScale(next){ scale = Math.max(0.3, Math.min(2.5, next)); applyTransform(); }
+  viewport.addEventListener('wheel', function(e){ e.preventDefault(); setScale(scale * (e.deltaY < 0 ? 1.1 : 1 / 1.1)); }, { passive:false });
+  document.getElementById('btn-zoom-in').addEventListener('click', function(){ setScale(scale * 1.2); });
+  document.getElementById('btn-zoom-out').addEventListener('click', function(){ setScale(scale / 1.2); });
+  document.getElementById('btn-zoom-reset').addEventListener('click', function(){ scale = 1; tx = 0; ty = 0; applyTransform(); });
+
+  // =========================================================== connect mode
+  var connectMode = false, pendingSource = null, ghostPath = null;
+  var connectBtn = document.getElementById('btn-connect');
+  var connectHint = document.getElementById('connect-hint');
+  function setConnectMode(on){
+    connectMode = on;
+    connectBtn.classList.toggle('active', on);
+    viewport.classList.toggle('connecting', on);
+    connectHint.classList.toggle('show', on);
+    if(!on) cancelConnect();
+  }
+  connectBtn.addEventListener('click', function(){ setConnectMode(!connectMode); });
+  function cancelConnect(){
+    pendingSource = null;
+    Object.keys(nodeEls).forEach(function(id){ nodeEls[id].classList.remove('connect-source'); });
+    if(ghostPath){ ghostPath.remove(); ghostPath = null; }
+  }
+  function drawGhostEdge(clientX, clientY){
+    var a = nodeEls[pendingSource];
+    if(!a) return;
+    var start = centerOf(a), p = toBoard(clientX, clientY);
+    if(!ghostPath){
+      ghostPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      ghostPath.setAttribute('class', 'edge-ghost');
+      svg.appendChild(ghostPath);
+    }
+    ghostPath.setAttribute('d', 'M ' + start.x + ' ' + start.y + ' L ' + p.x + ' ' + p.y);
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    if(pendingSource) cancelConnect();
+    else if(connectMode) setConnectMode(false);
+    else closeDetail();
+  });
+
+  // =========================================================== geometry
+  function centerOf(el){ return { x: parseFloat(el.style.left) + el.offsetWidth / 2, y: parseFloat(el.style.top) + el.offsetHeight / 2 }; }
+  function edgePoint(el, tX, tY){
+    var c = centerOf(el), hw = el.offsetWidth / 2, hh = el.offsetHeight / 2;
+    var dx = tX - c.x, dy = tY - c.y;
+    if(dx === 0 && dy === 0) return c;
+    var s = Math.min(hw / Math.abs(dx || 1e-6), hh / Math.abs(dy || 1e-6));
+    return { x: c.x + dx * s, y: c.y + dy * s };
+  }
+  function redrawEdges(){
+    Array.prototype.slice.call(svg.querySelectorAll('path.edge')).forEach(function(p){ p.remove(); });
+    Object.keys(edges).forEach(function(id){
+      var e = edges[id];
+      var a = nodeEls[e.from], b = nodeEls[e.to];
+      if(!a || !b) return;
+      var ca = centerOf(a), cb = centerOf(b);
+      var p1 = edgePoint(a, cb.x, cb.y), p2 = edgePoint(b, ca.x, ca.y);
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('class', 'edge');
+      path.setAttribute('d', 'M ' + p1.x + ' ' + p1.y + ' L ' + p2.x + ' ' + p2.y);
+      svg.appendChild(path);
+    });
   }
 
-  function computeBuckets(){
-    var b = {};
-    Object.keys(nodes).forEach(function(id){
+  // =========================================================== render board
+  function renderBoard(){
+    document.getElementById('board-title').textContent = (boardsMeta[currentBoardId] || {}).title || '보드';
+    var ids = Object.keys(boardItems);
+    emptyCanvas.classList.toggle('hide', ids.length > 0);
+
+    // sections
+    var seenSec = {};
+    Object.keys(sections).forEach(function(id){
+      seenSec[id] = true;
+      var s = sections[id];
+      var el = sectionEls[id];
+      if(!el){
+        el = document.createElement('div');
+        el.className = 'board-section';
+        el.dataset.id = id;
+        el.innerHTML = '<span class="sec-label" contenteditable="false"></span><span class="sec-del">×</span><span class="sec-resize"></span>';
+        world.insertBefore(el, world.firstChild.nextSibling); // just after svg
+        sectionEls[id] = el;
+        wireSectionEvents(el);
+      }
+      el.style.left = s.x + 'px'; el.style.top = s.y + 'px'; el.style.width = s.w + 'px'; el.style.height = s.h + 'px';
+      el.querySelector('.sec-label').textContent = s.label || '섹션';
+    });
+    Object.keys(sectionEls).forEach(function(id){ if(!seenSec[id]){ sectionEls[id].remove(); delete sectionEls[id]; } });
+
+    // cards
+    var seen = {};
+    ids.forEach(function(id){
+      seen[id] = true;
       var n = nodes[id];
-      if(!matchesFilters(n)) return;
-      var key = bucketOf(n);
-      (b[key] = b[key] || []).push(id);
+      if(!n) return;
+      var pos = boardItems[id];
+      var el = nodeEls[id];
+      if(!el){
+        el = document.createElement('div');
+        el.className = 'board-node';
+        el.dataset.id = id;
+        el.innerHTML = '<button type="button" class="remove" title="보드에서 제거">×</button><p class="eyebrow"></p><h4></h4><p class="sub"></p>';
+        world.appendChild(el);
+        nodeEls[id] = el;
+        wireNodeEvents(el);
+      }
+      el.dataset.kind = n.kind;
+      el.dataset.status = n.status || 'info';
+      el.style.left = pos.x + 'px'; el.style.top = pos.y + 'px';
+      el.querySelector('.eyebrow').textContent = kindLabel(n);
+      el.querySelector('h4').textContent = n.title || '(제목 없음)';
+      var sub = n.kind === 'paper' ? [n.authors, n.year].filter(Boolean).join(' · ') : (n.metric || '');
+      el.querySelector('.sub').textContent = sub;
     });
-    Object.keys(b).forEach(function(k){
-      b[k].sort(function(a, c){ return (nodes[a].title || '').localeCompare(nodes[c].title || ''); });
+    Object.keys(nodeEls).forEach(function(id){ if(!seen[id]){ nodeEls[id].remove(); delete nodeEls[id]; } });
+
+    redrawEdges();
+  }
+
+  function wireNodeEvents(el){
+    var dragging = false, moved = false, sx = 0, sy = 0, x0 = 0, y0 = 0;
+    el.addEventListener('pointerdown', function(e){
+      if(e.target.closest('.remove')) return;
+      var id = el.dataset.id;
+      if(connectMode){
+        e.stopPropagation();
+        if(!pendingSource){ pendingSource = id; el.classList.add('connect-source'); }
+        else if(pendingSource !== id){ createEdge(pendingSource, id); cancelConnect(); }
+        return;
+      }
+      dragging = true; moved = false;
+      el.classList.add('dragging');
+      sx = e.clientX; sy = e.clientY;
+      x0 = parseFloat(el.style.left); y0 = parseFloat(el.style.top);
+      el.setPointerCapture(e.pointerId);
+      e.stopPropagation();
     });
-    return b;
-  }
-
-  // ---------------------------------------------------------------- render
-  function render(){
-    renderBreadcrumb();
-    renderStage();
-    renderSidebarTree();
-  }
-
-  function renderBreadcrumb(){
-    var el = document.getElementById('breadcrumb');
-    var parts = ['<a href="#" data-lvl="0">전체</a>'];
-    if(drillPath.length >= 1) parts.push('<span class="sep">›</span><a href="#" data-lvl="1">' + escapeHtml(drillPath[0]) + '</a>');
-    if(drillPath.length >= 2){
-      var n = nodes[drillPath[1]];
-      parts.push('<span class="sep">›</span><span class="cur">' + escapeHtml(n ? n.title : '') + '</span>');
-    }
-    el.innerHTML = parts.join('');
-    el.querySelectorAll('a[data-lvl]').forEach(function(a){
-      a.addEventListener('click', function(e){
-        e.preventDefault();
-        var lvl = parseInt(a.getAttribute('data-lvl'), 10);
-        drillPath = drillPath.slice(0, lvl);
-        render();
-      });
+    el.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      if(Math.abs(e.clientX - sx) > 4 || Math.abs(e.clientY - sy) > 4) moved = true;
+      var dx = (e.clientX - sx) / scale, dy = (e.clientY - sy) / scale;
+      el.style.left = (x0 + dx) + 'px'; el.style.top = (y0 + dy) + 'px';
+      redrawEdges();
+    });
+    el.addEventListener('pointerup', function(){
+      if(!dragging) return;
+      dragging = false; el.classList.remove('dragging');
+      var id = el.dataset.id;
+      if(moved){
+        var x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+        boardItems[id] = { x:x, y:y };
+        persistItemPos(id, x, y);
+      } else {
+        openDetail(id);
+      }
+    });
+    el.querySelector('.remove').addEventListener('click', function(e){
+      e.stopPropagation();
+      removeFromBoard(el.dataset.id);
     });
   }
 
-  function stageClassFor(){
-    return drillPath.length === 0 ? 'lv-buckets' : drillPath.length === 1 ? 'lv-items' : 'lv-detail';
+  function wireSectionEvents(el){
+    var dragging = false, resizing = false, sx = 0, sy = 0, x0 = 0, y0 = 0, w0 = 0, h0 = 0;
+    el.addEventListener('pointerdown', function(e){
+      if(e.target.closest('.sec-del') || e.target.closest('.sec-label')) return;
+      var id = el.dataset.id;
+      if(e.target.closest('.sec-resize')){
+        resizing = true; sx = e.clientX; sy = e.clientY;
+        w0 = parseFloat(el.style.width); h0 = parseFloat(el.style.height);
+        el.setPointerCapture(e.pointerId); e.stopPropagation();
+        return;
+      }
+      dragging = true; sx = e.clientX; sy = e.clientY;
+      x0 = parseFloat(el.style.left); y0 = parseFloat(el.style.top);
+      el.setPointerCapture(e.pointerId); e.stopPropagation();
+    });
+    el.addEventListener('pointermove', function(e){
+      var id = el.dataset.id;
+      if(dragging){
+        var dx = (e.clientX - sx) / scale, dy = (e.clientY - sy) / scale;
+        el.style.left = (x0 + dx) + 'px'; el.style.top = (y0 + dy) + 'px';
+      } else if(resizing){
+        var dw = (e.clientX - sx) / scale, dh = (e.clientY - sy) / scale;
+        el.style.width = Math.max(140, w0 + dw) + 'px'; el.style.height = Math.max(100, h0 + dh) + 'px';
+      }
+    });
+    el.addEventListener('pointerup', function(){
+      var id = el.dataset.id;
+      if(dragging || resizing){
+        dragging = false; resizing = false;
+        var s = { x: parseFloat(el.style.left), y: parseFloat(el.style.top), w: parseFloat(el.style.width), h: parseFloat(el.style.height), label: sections[id] ? sections[id].label : '섹션' };
+        sections[id] = s;
+        persistSection(id, s);
+      }
+    });
+    el.querySelector('.sec-del').addEventListener('click', function(e){
+      e.stopPropagation();
+      var id = el.dataset.id;
+      delete sections[id];
+      el.remove(); delete sectionEls[id];
+      if(sectionsCol) sectionsCol.doc(id).delete().catch(function(){});
+    });
+    el.querySelector('.sec-label').addEventListener('click', function(e){
+      e.stopPropagation();
+      var id = el.dataset.id;
+      var name = prompt('섹션 이름', sections[id] ? sections[id].label : '섹션');
+      if(name == null) return;
+      sections[id].label = name;
+      persistSection(id, sections[id]);
+      el.querySelector('.sec-label').textContent = name;
+    });
   }
 
-  function renderStage(){
-    var stage = document.getElementById('stage');
-    stage.className = stageClassFor();
-    var inner = document.createElement('div');
-    inner.id = 'stage-inner';
+  // =========================================================== detail panel
+  var panel = document.getElementById('detail-panel');
+  var panelBody = document.getElementById('detail-body');
+  var openId = null;
 
-    var buckets = computeBuckets();
-    var bucketKeys = Object.keys(buckets).sort();
-
-    if(!Object.keys(nodes).length){
-      inner.innerHTML =
-        '<div id="empty-state"><p class="eyebrow">// paper trail</p><h2>아직 노드가 없습니다</h2>' +
-        '<p>Claude와의 대화에서 "이 논문 여기 추가해줘"라고 말하면 노트가 여기 올라옵니다. ' +
-        '직접 빠른 메모를 남기려면 위쪽 "+ 노드" 버튼을 쓰세요.</p></div>';
-    } else if(drillPath.length === 0){
-      inner.innerHTML = '<div class="bucket-grid">' + bucketKeys.map(function(key){
-        var ids = buckets[key];
-        var dotsHtml = ids.slice(0, 6).map(function(id){ return '<i style="background:' + dotColor(nodes[id]) + '"></i>'; }).join('');
-        return (
-          '<div class="bucket-card" data-bucket="' + escapeAttr(key) + '">' +
-            '<div class="name">' + escapeHtml(key) + '</div>' +
-            '<div class="cnt mono">' + ids.length + '개</div>' +
-            '<div class="dots">' + dotsHtml + '</div>' +
-          '</div>'
-        );
-      }).join('') + '</div>';
-      if(!bucketKeys.length) inner.innerHTML = '<div id="empty-state"><h2>검색/필터 결과가 없습니다</h2></div>';
-    } else if(drillPath.length === 1){
-      var ids1 = buckets[drillPath[0]] || [];
-      inner.innerHTML =
-        '<div class="item-list">' + ids1.map(function(id){
-          var n = nodes[id];
-          var sub = n.kind === 'paper' ? [n.authors, n.year].filter(Boolean).join(' · ') : (n.metric || '');
-          return (
-            '<div class="item-row" data-id="' + id + '" style="border-left-color:' + dotColor(n) + '">' +
-              '<div>' +
-                '<div class="eyebrow">' + kindLabel(n) + '</div>' +
-                '<div class="title">' + escapeHtml(n.title || '(제목 없음)') + '</div>' +
-                (sub ? '<div class="sub">' + escapeHtml(sub) + '</div>' : '') +
-              '</div>' +
-              '<span class="chev">›</span>' +
-            '</div>'
-          );
-        }).join('') + '</div>';
-      if(!ids1.length) inner.innerHTML = '<div id="empty-state"><h2>이 카테고리엔 항목이 없습니다</h2></div>';
-    } else {
-      inner.innerHTML = renderDetail(drillPath[1]);
-    }
-
-    stage.innerHTML = '';
-    stage.appendChild(inner);
-    wireStageEvents();
-  }
-
-  function renderDetail(id){
+  function openDetail(id){
+    openId = id;
     var n = nodes[id];
-    if(!n) return '<div id="empty-state"><h2>노드를 찾을 수 없습니다</h2></div>';
+    if(!n) return;
     var color = dotColor(n);
     var metaBits = [];
     if(n.kind === 'paper'){
       if(n.authors) metaBits.push(escapeHtml(n.authors));
       if(n.year) metaBits.push(n.year);
-      if(n.notionUrl) metaBits.push('<a href="' + escapeAttr(n.notionUrl) + '" target="_blank" rel="noopener">Notion &#8599;</a>');
-    } else if(n.kind === 'experiment' && n.metric){
+      if(n.notionUrl) metaBits.push('<a href="' + n.notionUrl + '" target="_blank" rel="noopener">Notion &#8599;</a>');
+    } else if(n.metric){
       metaBits.push(escapeHtml(n.metric));
     }
-
     var cites = [], citedBy = [];
     Object.keys(edges).forEach(function(eid){
       var e = edges[eid];
       if(e.from === id && nodes[e.to]) cites.push(e.to);
       if(e.to === id && nodes[e.from]) citedBy.push(e.from);
     });
-
-    function relList(title, ids){
-      if(!ids.length) return '';
-      return (
-        '<div class="rel-block"><p class="sb-section-label">' + title + ' (' + ids.length + ')</p>' +
-        '<div class="rel-list">' + ids.map(function(rid){
-          return '<a class="rel-item" data-jump="' + rid + '">' + escapeHtml(nodes[rid].title || rid) + '</a>';
-        }).join('') + '</div></div>'
-      );
+    function relList(title, list){
+      if(!list.length) return '';
+      return '<div class="rel-block"><p class="sb-section-label">' + title + ' (' + list.length + ')</p><div class="rel-list">' +
+        list.map(function(rid){ return '<a class="rel-item" data-jump="' + rid + '">' + escapeHtml(nodes[rid].title || rid) + '</a>'; }).join('') +
+        '</div></div>';
     }
-
-    return (
-      '<div class="detail-card" style="border-left-color:' + color + '">' +
-        '<p class="eyebrow" style="color:' + color + '">' + kindLabel(n) + '</p>' +
-        '<h2>' + escapeHtml(n.title || '(제목 없음)') + '</h2>' +
-        (metaBits.length ? '<div class="meta-line">' + metaBits.join(' <span class="sep">·</span> ') + '</div>' : '') +
-        '<div class="text-box">' + escapeHtml(n.text || '') + '</div>' +
-        relList('인용한 논문', cites) +
-        relList('이 논문을 인용', citedBy) +
-        '<div class="detail-actions"><button type="button" class="btn-del" id="btn-detail-del">이 노드 삭제</button></div>' +
-      '</div>'
-    );
+    var onThisBoard = !!boardItems[id];
+    panelBody.innerHTML =
+      '<p class="eyebrow" style="color:' + color + '">' + kindLabel(n) + '</p>' +
+      '<h2>' + escapeHtml(n.title || '(제목 없음)') + '</h2>' +
+      (metaBits.length ? '<div class="meta-line">' + metaBits.join(' <span>·</span> ') + '</div>' : '') +
+      '<div class="text-box">' + escapeHtml(n.text || '') + '</div>' +
+      relList('인용한 논문', cites) + relList('이 논문을 인용', citedBy) +
+      '<div class="actions">' +
+        (onThisBoard ? '' : '<button type="button" class="btn-add-board" id="btn-panel-add">＋ 이 보드에 추가</button>') +
+        '<button type="button" class="btn-del" id="btn-panel-del">라이브러리에서 삭제</button>' +
+      '</div>';
+    panel.classList.add('open');
+    var addBtn = document.getElementById('btn-panel-add');
+    if(addBtn) addBtn.addEventListener('click', function(){ addExistingToBoard(id); openDetail(id); });
+    document.getElementById('btn-panel-del').addEventListener('click', function(){ deleteFromLibrary(id); });
+    panelBody.querySelectorAll('.rel-item').forEach(function(a){
+      a.addEventListener('click', function(){
+        var rid = a.getAttribute('data-jump');
+        if(!boardItems[rid]) addExistingToBoard(rid);
+        openDetail(rid);
+      });
+    });
   }
+  function closeDetail(){ panel.classList.remove('open'); openId = null; }
+  document.getElementById('detail-close').addEventListener('click', closeDetail);
 
-  function wireStageEvents(){
-    document.querySelectorAll('.bucket-card').forEach(function(el){
-      el.addEventListener('click', function(){
-        drillPath = [el.getAttribute('data-bucket')];
-        render();
+  // =========================================================== sidebar: boards
+  function renderBoardList(){
+    var el = document.getElementById('board-list');
+    el.innerHTML = boardOrder.map(function(id){
+      var b = boardsMeta[id];
+      if(!b) return '';
+      return '<div class="board-row' + (id === currentBoardId ? ' current' : '') + '" data-id="' + id + '">' +
+        '<span class="t">' + escapeHtml(b.title) + '</span><span class="x" data-del="' + id + '">×</span></div>';
+    }).join('');
+    el.querySelectorAll('.board-row').forEach(function(row){
+      row.addEventListener('click', function(e){
+        if(e.target.dataset.del) return;
+        switchBoard(row.getAttribute('data-id'));
       });
     });
-    document.querySelectorAll('.item-row').forEach(function(el){
-      el.addEventListener('click', function(){
-        drillPath = [drillPath[0], el.getAttribute('data-id')];
-        render();
+    el.querySelectorAll('[data-del]').forEach(function(x){
+      x.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = x.getAttribute('data-del');
+        if(boardOrder.length <= 1){ alert('마지막 보드는 지울 수 없습니다.'); return; }
+        if(!confirm('"' + (boardsMeta[id] || {}).title + '" 보드를 삭제할까요? (안의 카드는 라이브러리에 그대로 남습니다)')) return;
+        if(boardsCol) boardsCol.doc(id).delete().catch(function(){});
+        if(id === currentBoardId) switchBoard(boardOrder.filter(function(b){ return b !== id; })[0]);
       });
     });
-    document.querySelectorAll('.rel-item').forEach(function(el){
-      el.addEventListener('click', function(){
-        var rid = el.getAttribute('data-jump');
-        drillPath = [bucketOf(nodes[rid]), rid];
-        render();
-      });
-    });
-    var delBtn = document.getElementById('btn-detail-del');
-    if(delBtn) delBtn.addEventListener('click', function(){ deleteNode(drillPath[1]); });
   }
+  document.getElementById('btn-new-board').addEventListener('click', function(){
+    var name = prompt('새 보드 이름', '새 보드');
+    if(name == null) return;
+    createBoard(name.trim() || '새 보드');
+  });
+  document.getElementById('board-title').addEventListener('click', function(){
+    var b = boardsMeta[currentBoardId];
+    var name = prompt('보드 이름 바꾸기', b ? b.title : '');
+    if(name == null || !name.trim()) return;
+    if(boardsCol) boardsCol.doc(currentBoardId).update({ title: name.trim() }).catch(function(){});
+  });
 
-  // ------------------------------------------------------------ sidebar tree
-  var sbExpanded = {}; // bucket -> bool
-
-  function renderSidebarTree(){
+  // =========================================================== sidebar: library
+  function matchesFilters(n){
+    if(Object.keys(filters.kinds).length && !filters.kinds[n.kind]) return false;
+    if(filters.query){
+      var hay = ((n.title || '') + ' ' + (n.authors || '')).toLowerCase();
+      if(hay.indexOf(filters.query) === -1) return false;
+    }
+    return true;
+  }
+  var sbExpanded = {};
+  function renderLibraryTree(){
     var el = document.getElementById('sb-tree');
-    var buckets = computeBuckets();
+    var buckets = {};
+    Object.keys(nodes).forEach(function(id){
+      var n = nodes[id];
+      if(!matchesFilters(n)) return;
+      var k = bucketOf(n);
+      (buckets[k] = buckets[k] || []).push(id);
+    });
     var keys = Object.keys(buckets).sort();
     var searching = !!filters.query;
     el.innerHTML = keys.map(function(key){
-      var ids = buckets[key];
-      var open = searching || sbExpanded[key] || drillPath[0] === key;
+      var ids = buckets[key].sort(function(a, c){ return (nodes[a].title || '').localeCompare(nodes[c].title || ''); });
+      var open = searching || sbExpanded[key];
       var itemsHtml = open ? ids.map(function(id){
         var n = nodes[id];
-        var cur = drillPath[1] === id;
-        return (
-          '<div class="sb-item' + (cur ? ' current' : '') + '" data-id="' + id + '" data-bucket="' + escapeAttr(key) + '">' +
-            '<span class="dot" style="background:' + dotColor(n) + '"></span>' +
-            '<span class="t">' + escapeHtml(n.title || '(제목 없음)') + '</span>' +
-          '</div>'
-        );
+        var onBoard = !!boardItems[id];
+        return '<div class="sb-item' + (onBoard ? ' on-board' : '') + '" data-id="' + id + '">' +
+          '<span class="dot" style="background:' + dotColor(n) + '"></span>' +
+          '<span class="t" data-open="' + id + '">' + escapeHtml(n.title || '(제목 없음)') + '</span>' +
+          '<button type="button" class="add" data-add="' + id + '" title="' + (onBoard ? '이 보드에 있음' : '이 보드에 추가') + '">' + (onBoard ? '✓' : '+') + '</button>' +
+        '</div>';
       }).join('') : '';
-      return (
-        '<div class="sb-bucket-head' + (drillPath[0] === key && drillPath.length === 1 ? ' current' : '') + '" data-bucket="' + escapeAttr(key) + '">' +
-          '<span class="car">' + (open ? '▾' : '▸') + '</span>' +
-          '<span>' + escapeHtml(key) + '</span>' +
-          '<span class="cnt">' + ids.length + '</span>' +
-        '</div>' +
-        (open ? '<div class="sb-items">' + itemsHtml + '</div>' : '')
-      );
+      return '<div class="sb-bucket-head" data-bucket="' + key + '"><span class="car">' + (open ? '▾' : '▸') + '</span><span>' +
+        escapeHtml(key) + '</span><span class="cnt">' + ids.length + '</span></div>' +
+        (open ? '<div class="sb-items">' + itemsHtml + '</div>' : '');
     }).join('');
-
-    el.querySelectorAll('.sb-bucket-head').forEach(function(head){
-      head.addEventListener('click', function(){
-        var key = head.getAttribute('data-bucket');
-        if(filters.query){ drillPath = [key]; render(); return; }
-        sbExpanded[key] = !sbExpanded[key];
-        renderSidebarTree();
+    el.querySelectorAll('.sb-bucket-head').forEach(function(h){
+      h.addEventListener('click', function(){
+        var k = h.getAttribute('data-bucket');
+        sbExpanded[k] = !sbExpanded[k];
+        renderLibraryTree();
       });
     });
-    el.querySelectorAll('.sb-item').forEach(function(item){
-      item.addEventListener('click', function(e){
-        e.stopPropagation();
-        drillPath = [item.getAttribute('data-bucket'), item.getAttribute('data-id')];
-        render();
+    el.querySelectorAll('[data-open]').forEach(function(t){ t.addEventListener('click', function(){ openDetail(t.getAttribute('data-open')); }); });
+    el.querySelectorAll('[data-add]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var id = b.getAttribute('data-add');
+        if(boardItems[id]) return;
+        addExistingToBoard(id);
       });
     });
   }
-
-  // ------------------------------------------------------------------ util
-  function escapeHtml(s){
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
-      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-    });
-  }
-  function escapeAttr(s){ return escapeHtml(s); }
-
-  // ------------------------------------------------------------- filters ui
-  var KIND_OPTIONS = [['paper', 'Paper'], ['finding', 'Finding'], ['experiment', 'Experiment']];
   function renderFilters(){
     var el = document.getElementById('sb-filters');
     el.innerHTML = KIND_OPTIONS.map(function(k){
@@ -526,42 +801,91 @@
       chip.addEventListener('click', function(){
         var k = chip.getAttribute('data-kind');
         if(filters.kinds[k]) delete filters.kinds[k]; else filters.kinds[k] = true;
-        renderFilters();
-        render();
+        renderFilters(); renderLibraryTree();
       });
     });
   }
-
   document.getElementById('sb-search').addEventListener('input', function(e){
     filters.query = e.target.value.trim().toLowerCase();
-    render();
+    renderLibraryTree();
   });
 
-  // -------------------------------------------------------------- db wiring
-  var db = null, nodesCol = null, edgesCol = null;
-
-  function persistDelete(id){ if(nodesCol) nodesCol.doc(id).delete().catch(function(){}); }
-
-  function deleteNode(id){
+  // =========================================================== add/remove/delete
+  var addCascade = 0;
+  function defaultDropPos(){
+    var vp = viewport.getBoundingClientRect();
+    var c = toBoard(vp.left + vp.width / 2, vp.top + vp.height / 2);
+    addCascade = (addCascade + 1) % 6;
+    return { x: c.x - 115 + addCascade * 22, y: c.y - 45 + addCascade * 22 };
+  }
+  function addExistingToBoard(id){
+    var pos = defaultDropPos();
+    boardItems[id] = pos;
+    persistItemPos(id, pos.x, pos.y);
+    renderBoard(); renderLibraryTree();
+  }
+  function removeFromBoard(id){
+    delete boardItems[id];
+    if(itemsCol) itemsCol.doc(id).delete().catch(function(){});
+    renderBoard(); renderLibraryTree();
+    if(openId === id) closeDetail();
+  }
+  function deleteFromLibrary(id){
+    if(!confirm('이 카드를 라이브러리에서 완전히 삭제할까요? (모든 보드에서 사라집니다)')) return;
     delete nodes[id];
+    delete boardItems[id];
+    if(nodesCol) nodesCol.doc(id).delete().catch(function(){});
+    if(itemsCol) itemsCol.doc(id).delete().catch(function(){});
     Object.keys(edges).forEach(function(eid){
       if(edges[eid].from === id || edges[eid].to === id){
-        var eeid = eid;
-        delete edges[eeid];
-        if(edgesCol) edgesCol.doc(eeid).delete().catch(function(){});
+        delete edges[eid];
+        if(edgesCol) edgesCol.doc(eid).delete().catch(function(){});
       }
     });
-    persistDelete(id);
-    drillPath = drillPath.slice(0, 1);
-    render();
+    closeDetail();
+    renderBoard(); renderLibraryTree();
+  }
+  function createEdge(from, to){
+    var id = 'e-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    edges[id] = { from: from, to: to, label: '' };
+    redrawEdges();
+    if(edgesCol) edgesCol.doc(id).set(edges[id]).catch(function(){});
   }
 
-  function addNode(data){
-    var id = 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
-    nodes[id] = data;
-    if(nodesCol) nodesCol.doc(id).set(data).catch(function(){});
-    drillPath = [bucketOf(data), id];
-    render();
+  // =========================================================== db wiring
+  var db = null, nodesCol = null, edgesCol = null, boardsCol = null, itemsCol = null, sectionsCol = null;
+  var unsubItems = null, unsubSections = null;
+
+  function persistItemPos(id, x, y){ if(itemsCol) itemsCol.doc(id).set({ x:x, y:y }).catch(function(){}); }
+  function persistSection(id, s){ if(sectionsCol) sectionsCol.doc(id).set(s).catch(function(){}); }
+
+  function createBoard(title){
+    if(!boardsCol) return;
+    boardsCol.add({ title: title, createdAt: Date.now() }).then(function(ref){ switchBoard(ref.id); }).catch(function(){});
+  }
+
+  function switchBoard(id){
+    if(!id || id === currentBoardId && nodeEls) { /* still resync below */ }
+    currentBoardId = id;
+    boardItems = {}; sections = {};
+    Object.keys(nodeEls).forEach(function(k){ nodeEls[k].remove(); }); nodeEls = {};
+    Object.keys(sectionEls).forEach(function(k){ sectionEls[k].remove(); }); sectionEls = {};
+    renderBoard(); renderBoardList(); renderLibraryTree();
+    if(unsubItems) unsubItems();
+    if(unsubSections) unsubSections();
+    if(!db) return;
+    itemsCol = db.collection('boards/' + id + '/items');
+    sectionsCol = db.collection('boards/' + id + '/sections');
+    unsubItems = itemsCol.onSnapshot(function(snap){
+      boardItems = {};
+      snap.docs.forEach(function(d){ boardItems[d.id] = d.data(); });
+      renderBoard(); renderLibraryTree();
+    }, function(){});
+    unsubSections = sectionsCol.onSnapshot(function(snap){
+      sections = {};
+      snap.docs.forEach(function(d){ sections[d.id] = d.data(); });
+      renderBoard();
+    }, function(){});
   }
 
   async function initDb(){
@@ -569,20 +893,31 @@
     if(!db) return;
     nodesCol = db.collection('nodes');
     edgesCol = db.collection('edges');
+    boardsCol = db.collection('boards');
+
     nodesCol.onSnapshot(function(snap){
       nodes = {};
       snap.docs.forEach(function(d){ nodes[d.id] = d.data(); });
-      render();
+      renderBoard(); renderLibraryTree();
+      if(openId) openDetail(openId);
     }, function(){});
     edgesCol.onSnapshot(function(snap){
       edges = {};
       snap.docs.forEach(function(d){ edges[d.id] = d.data(); });
-      if(drillPath.length === 2) render(); // detail view shows cites/cited-by
+      redrawEdges();
+      if(openId) openDetail(openId);
+    }, function(){});
+    boardsCol.onSnapshot(function(snap){
+      boardsMeta = {}; boardOrder = [];
+      snap.docs.forEach(function(d){ boardsMeta[d.id] = d.data(); boardOrder.push(d.id); });
+      boardOrder.sort(function(a, b){ return (boardsMeta[a].createdAt || 0) - (boardsMeta[b].createdAt || 0); });
+      if(!currentBoardId && boardOrder.length){ switchBoard(boardOrder[0]); }
+      else if(!boardOrder.length){ createBoard('첫 보드'); }
+      else renderBoardList();
     }, function(){});
   }
 
-  // ----------------------------------------------------------------- composer
-  var CATEGORY_OPTIONS = ['Vision', 'Language', 'Speech-Audio', 'Time-Series', 'Multimodal', 'Robotics', 'Graph-Network', 'Generative', 'Algorithms', 'Uncategorized'];
+  // =========================================================== composer
   var composer = document.getElementById('composer');
   var cKind = document.getElementById('c-kind');
   var cCategory = document.getElementById('c-category');
@@ -592,19 +927,16 @@
   var cAuthors = document.getElementById('c-authors');
   var cYear = document.getElementById('c-year');
   var cUrl = document.getElementById('c-url');
-
   cCategory.innerHTML = CATEGORY_OPTIONS.map(function(c){ return '<option value="' + c + '">' + c + '</option>'; }).join('');
 
   function updateComposerFields(){
-    var isExp = cKind.value === 'experiment';
-    var isPaper = cKind.value === 'paper';
+    var isExp = cKind.value === 'experiment', isPaper = cKind.value === 'paper';
     document.getElementById('c-extra-experiment').style.display = isExp ? 'block' : 'none';
     document.getElementById('c-extra-paper').style.display = isPaper ? 'block' : 'none';
     document.getElementById('c-extra-paper2').style.display = isPaper ? 'block' : 'none';
   }
   cKind.addEventListener('change', updateComposerFields);
-
-  document.getElementById('btn-add').addEventListener('click', function(){ composer.classList.add('show'); cTitle.focus(); });
+  document.getElementById('btn-add-card').addEventListener('click', function(){ composer.classList.add('show'); cTitle.focus(); });
   document.getElementById('c-cancel').addEventListener('click', function(){
     composer.classList.remove('show');
     cTitle.value = ''; cText.value = ''; cAuthors.value = ''; cYear.value = ''; cUrl.value = '';
@@ -619,13 +951,25 @@
       if(cYear.value.trim()) data.year = cYear.value.trim();
       if(cUrl.value.trim()) data.notionUrl = cUrl.value.trim();
     }
-    addNode(data);
+    var id = 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    nodes[id] = data;
+    if(nodesCol) nodesCol.doc(id).set(data).catch(function(){});
+    addExistingToBoard(id);
     document.getElementById('c-cancel').click();
+  });
+  document.getElementById('btn-add-section').addEventListener('click', function(){
+    var vp = viewport.getBoundingClientRect();
+    var c = toBoard(vp.left + vp.width / 2, vp.top + vp.height / 2);
+    var id = 's-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    var s = { x: c.x - 160, y: c.y - 100, w: 320, h: 200, label: '새 섹션' };
+    sections[id] = s;
+    persistSection(id, s);
+    renderBoard();
   });
   updateComposerFields();
 
+  applyTransform();
   renderFilters();
-  render();
   initDb();
 })();
 </script>
