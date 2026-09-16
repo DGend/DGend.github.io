@@ -300,6 +300,7 @@
       <button type="button" class="tbtn" id="btn-add-card">＋ 카드</button>
       <button type="button" class="tbtn" id="btn-add-section">▭ 섹션</button>
       <button type="button" class="tbtn" id="btn-connect">🔗 연결</button>
+      <button type="button" class="tbtn" id="btn-fill-graph" title="인용 관계가 있는 카드를 전부 이 보드에 자동 배치">🕸 인용 그래프 채우기</button>
       <div class="zoomgrp">
         <button type="button" id="btn-zoom-out">－</button>
         <button type="button" id="btn-zoom-reset">100%</button>
@@ -824,6 +825,77 @@
     persistItemPos(id, pos.x, pos.y);
     renderBoard(); renderLibraryTree();
   }
+
+  // Auto-fill: instead of adding cards one at a time, lay out every card
+  // that has at least one citation edge onto the current board in one go
+  // (grouped by connected component: pairs side by side, bigger clusters
+  // in a small circle, components flowed left-to-right/wrapping).
+  function connectedComponents(){
+    var adj = {};
+    Object.keys(edges).forEach(function(id){
+      var e = edges[id];
+      if(!nodes[e.from] || !nodes[e.to]) return;
+      (adj[e.from] = adj[e.from] || []).push(e.to);
+      (adj[e.to] = adj[e.to] || []).push(e.from);
+    });
+    var seen = {}, comps = [];
+    Object.keys(adj).forEach(function(start){
+      if(seen[start]) return;
+      var stack = [start], comp = [];
+      seen[start] = true;
+      while(stack.length){
+        var cur = stack.pop();
+        comp.push(cur);
+        (adj[cur] || []).forEach(function(nb){ if(!seen[nb]){ seen[nb] = true; stack.push(nb); } });
+      }
+      comps.push(comp);
+    });
+    comps.sort(function(a, b){ return b.length - a.length; });
+    return comps;
+  }
+
+  function layoutCitationGraph(){
+    var comps = connectedComponents();
+    var placements = {};
+    var cursorX = 40, cursorY = 40, rowH = 0, maxRowW = 2600;
+    comps.forEach(function(comp){
+      var n = comp.length;
+      var radius = n <= 2 ? 0 : Math.max(70, 34 + n * 16);
+      var boxW = n <= 2 ? 300 : radius * 2 + 240;
+      var boxH = n <= 2 ? 120 : radius * 2 + 120;
+      if(cursorX + boxW > maxRowW){ cursorX = 40; cursorY += rowH + 60; rowH = 0; }
+      var cx = cursorX + boxW / 2, cy = cursorY + boxH / 2;
+      if(n <= 2){
+        placements[comp[0]] = { x: cursorX, y: cy - 45 };
+        if(n === 2) placements[comp[1]] = { x: cursorX + 260, y: cy - 45 };
+      } else {
+        comp.forEach(function(id, i){
+          var angle = 2 * Math.PI * i / n;
+          placements[id] = { x: cx + radius * Math.cos(angle) - 115, y: cy + radius * Math.sin(angle) - 45 };
+        });
+      }
+      cursorX += boxW + 60;
+      rowH = Math.max(rowH, boxH);
+    });
+    return placements;
+  }
+
+  function fillCitationGraph(){
+    var placements = layoutCitationGraph();
+    var ids = Object.keys(placements).filter(function(id){ return !boardItems[id]; });
+    if(!ids.length){ alert('추가할 게 없습니다 — 인용 관계가 있는 카드는 이미 모두 이 보드에 있습니다.'); return; }
+    ids.forEach(function(id){ boardItems[id] = placements[id]; });
+    renderBoard(); renderLibraryTree();
+    // stagger writes so ~150-250 docs don't fire as one burst
+    var queue = ids.slice();
+    (function step(){
+      if(!queue.length) return;
+      var id = queue.shift();
+      persistItemPos(id, placements[id].x, placements[id].y);
+      setTimeout(step, 15);
+    })();
+  }
+  document.getElementById('btn-fill-graph').addEventListener('click', fillCitationGraph);
   function removeFromBoard(id){
     delete boardItems[id];
     if(itemsCol) itemsCol.doc(id).delete().catch(function(){});
