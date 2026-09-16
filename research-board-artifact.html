@@ -139,6 +139,8 @@
   svg#board-edges{ position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
   svg#board-edges path.edge{ fill:none; stroke:var(--ink-faint); stroke-width:1.6; }
   svg#board-edges path.edge-ghost{ fill:none; stroke:var(--paper); stroke-width:1.6; stroke-dasharray:4 4; }
+  svg#board-edges path.edge.highlighted{ stroke:var(--paper); stroke-width:2.6; }
+  svg#board-edges path.edge.dimmed{ opacity:.12; }
 
   .board-section{
     position:absolute; border:1.5px dashed var(--line-soft); border-radius:10px; background:rgba(255,255,255,.02);
@@ -165,6 +167,8 @@
   }
   .board-node.dragging{ cursor:grabbing; box-shadow:0 14px 32px rgba(0,0,0,.5); z-index:6; }
   .board-node.connect-source{ outline:2px solid var(--paper); outline-offset:2px; }
+  .board-node.highlighted{ box-shadow:0 0 0 2px var(--paper), var(--shadow); z-index:5; }
+  .board-node.dimmed{ opacity:.25; }
   .board-node[data-kind="paper"]{ border-left-color:var(--paper); }
   .board-node[data-kind="finding"]{ border-left-color:var(--finding); }
   .board-node[data-kind="experiment"][data-status="success"]{ border-left-color:var(--success); }
@@ -411,24 +415,31 @@
     var r = viewport.getBoundingClientRect();
     return { x: (clientX - r.left - tx) / scale, y: (clientY - r.top - ty) / scale };
   }
-  var panning = false, panStartX = 0, panStartY = 0, panTx0 = 0, panTy0 = 0;
+  var panning = false, panMoved = false, panStartX = 0, panStartY = 0, panTx0 = 0, panTy0 = 0;
   viewport.addEventListener('pointerdown', function(e){
     if(e.target.closest('.board-node') || e.target.closest('.board-section')) return;
     if(connectMode){ cancelConnect(); return; }
-    panning = true;
+    panning = true; panMoved = false;
     viewport.classList.add('panning');
     panStartX = e.clientX; panStartY = e.clientY; panTx0 = tx; panTy0 = ty;
     viewport.setPointerCapture(e.pointerId);
   });
   viewport.addEventListener('pointermove', function(e){
     if(panning){
+      if(Math.abs(e.clientX - panStartX) > 4 || Math.abs(e.clientY - panStartY) > 4) panMoved = true;
       tx = panTx0 + (e.clientX - panStartX);
       ty = panTy0 + (e.clientY - panStartY);
       applyTransform();
     }
     if(connectMode && pendingSource) drawGhostEdge(e.clientX, e.clientY);
   });
-  viewport.addEventListener('pointerup', function(){ if(panning){ panning = false; viewport.classList.remove('panning'); } });
+  viewport.addEventListener('pointerup', function(){
+    if(panning){
+      panning = false;
+      viewport.classList.remove('panning');
+      if(!panMoved) closeDetail(); // click on empty background: deselect + close panel
+    }
+  });
 
   function setScale(next){ scale = Math.max(0.3, Math.min(2.5, next)); applyTransform(); }
   viewport.addEventListener('wheel', function(e){ e.preventDefault(); setScale(scale * (e.deltaY < 0 ? 1.1 : 1 / 1.1)); }, { passive:false });
@@ -491,9 +502,43 @@
       var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('class', 'edge');
       path.setAttribute('d', 'M ' + p1.x + ' ' + p1.y + ' L ' + p2.x + ' ' + p2.y);
+      path.dataset.from = e.from; path.dataset.to = e.to;
       svg.appendChild(path);
     });
+    applySelectionVisual();
   }
+
+  // =========================================================== selection highlight
+  var selectedId = null;
+  function neighborsOf(id){
+    var set = {}; set[id] = true;
+    Object.keys(edges).forEach(function(eid){
+      var e = edges[eid];
+      if(e.from === id) set[e.to] = true;
+      if(e.to === id) set[e.from] = true;
+    });
+    return set;
+  }
+  function applySelectionVisual(){
+    if(!selectedId){
+      Object.keys(nodeEls).forEach(function(id){ nodeEls[id].classList.remove('highlighted', 'dimmed'); });
+      svg.querySelectorAll('path.edge').forEach(function(p){ p.classList.remove('highlighted', 'dimmed'); });
+      return;
+    }
+    var set = neighborsOf(selectedId);
+    Object.keys(nodeEls).forEach(function(id){
+      var el = nodeEls[id];
+      el.classList.toggle('highlighted', !!set[id]);
+      el.classList.toggle('dimmed', !set[id]);
+    });
+    svg.querySelectorAll('path.edge').forEach(function(p){
+      var on = p.dataset.from === selectedId || p.dataset.to === selectedId;
+      p.classList.toggle('highlighted', on);
+      p.classList.toggle('dimmed', !on);
+    });
+  }
+  function selectNode(id){ selectedId = id; applySelectionVisual(); }
+  function clearSelection(){ selectedId = null; applySelectionVisual(); }
 
   // =========================================================== render board
   function renderBoard(){
@@ -655,6 +700,7 @@
     openId = id;
     var n = nodes[id];
     if(!n) return;
+    selectNode(id);
     var color = dotColor(n);
     var metaBits = [];
     if(n.kind === 'paper'){
@@ -699,7 +745,7 @@
       });
     });
   }
-  function closeDetail(){ panel.classList.remove('open'); openId = null; }
+  function closeDetail(){ panel.classList.remove('open'); openId = null; clearSelection(); }
   document.getElementById('detail-close').addEventListener('click', closeDetail);
 
   // =========================================================== sidebar: boards
